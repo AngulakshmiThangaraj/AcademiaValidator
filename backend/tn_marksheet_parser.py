@@ -50,7 +50,7 @@ def parse_tn_marksheet_ocr(raw_text, qr_payload=None):
     # 1. Certificate ID
     cert_id_match = re.search(r'(?:CERTIFICATE|SERIAL|SL|NO)\s*[:\-.]?\s*(\b[A-Z0-9\-]{7,15}\b)', norm_text, re.IGNORECASE)
     if not cert_id_match:
-        cert_id_match = re.search(r'\b(2435\d{4}|DEMO-\d{8}|\d{8})\b', norm_text)
+        cert_id_match = re.search(r'\b(8888\d{4}|DEMO-\d{8}|\d{8})\b', norm_text)
     
     if cert_id_match and fields["certificate_id"]["value"] is None:
         fields["certificate_id"] = {"value": cert_id_match.group(1), "confidence": 0.94}
@@ -58,7 +58,7 @@ def parse_tn_marksheet_ocr(raw_text, qr_payload=None):
     # 2. Register Number
     reg_match = re.search(r'(?:REGISTER\s*NUMBER|REGISTER\s*NO|REG\s*NO)\s*[:\-.]?\s*([A-Z0-9\-]{6,12})', norm_text, re.IGNORECASE)
     if not reg_match:
-        reg_match = re.search(r'\b(5395\d{4}|519\d{4}|\d{7,8})\b', norm_text)
+        reg_match = re.search(r'\b(7777\d{4}|519\d{4}|\d{7,8})\b', norm_text)
 
     if reg_match and fields["register_no"]["value"] is None:
         fields["register_no"] = {"value": reg_match.group(1), "confidence": 0.95}

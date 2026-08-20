@@ -210,7 +210,7 @@ async def process_marksheet_verification(file: UploadFile = None, preset_type: s
     # 1. QR Code Payload Decoding from High-Res Image
     qr_data_raw = decode_qr_code(pil_image)
     if not qr_data_raw and preset_type in ["tn_sslc_genuine", "tn_sslc_manipulated"]:
-        qr_data_raw = "TNSSLC|24353750|53959247|ANGULAKSHMI T|APR 2023"
+        qr_data_raw = "TNSSLC|88880001|77770001|ANGULAKSHMI T|APR 2023"
 
     # 2. Tamil Nadu OCR Engine Execution
     raw_ocr_text, ocr_info = perform_tn_ocr(pil_image)

@@ -170,7 +170,7 @@ def create_demo_certificates():
 def create_tn_sslc_sample(preset_type="tn_sslc_genuine"):
     """
     Generates Tamil Nadu State Board SSLC Marksheet image.
-    Genuine: ANGULAKSHMI T (Cert ID: 24353750, Reg: 53959247, Total: 451)
+    Genuine: ANGULAKSHMI T (Cert ID: 88880001, Reg: 77770001, Total: 451)
     Manipulated: Altered Total Marks to 499 (discrepancy detected).
     """
     width, height = 850, 1100
@@ -190,14 +190,14 @@ def create_tn_sslc_sample(preset_type="tn_sslc_genuine"):
     draw.text((width // 2, 104), "SSLC MARKSHEET / இடைநிலைப் பள்ளி விடுப்புச் சான்றிதழ்", fill=(10, 60, 130), font=font_bold, anchor="mm")
     draw.line([(50, 125), (width - 50, 125)], fill=(200, 160, 60), width=2)
 
-    cert_id_str = "24353750"
+    cert_id_str = "88880001"
     draw.text((580, 138), f"CERTIFICATE NO : {cert_id_str}", fill=(180, 20, 20), font=font_bold)
     draw.text((580, 158), "SESSION : APR 2023", fill=(40, 40, 40), font=font_body)
 
     draw.rectangle([50, 185, width - 50, 310], fill=(248, 250, 255), outline=(180, 200, 230), width=1)
     
     name_str = "ANGULAKSHMI T"
-    reg_str = "53959247"
+    reg_str = "77770001"
 
     draw.text((70, 200), f"NAME OF CANDIDATE  : {name_str}", fill=(20, 20, 20), font=font_bold)
     draw.text((70, 226), f"REGISTER NUMBER    : {reg_str}", fill=(20, 20, 20), font=font_bold)
@@ -238,7 +238,7 @@ def create_tn_sslc_sample(preset_type="tn_sslc_genuine"):
     draw.text((550, y + 28), f"TOTAL MARKS: {total_val} / 500   RESULT: PASS", fill=total_color, font=font_bold)
 
     # Embed Normalized QR Code payload
-    qr_payload = "TNSSLC|24353750|53959247|ANGULAKSHMI T|APR 2023"
+    qr_payload = "TNSSLC|88880001|77770001|ANGULAKSHMI T|APR 2023"
     qr = qrcode.QRCode(box_size=3, border=1)
     qr.add_data(qr_payload)
     qr.make(fit=True)

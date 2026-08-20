@@ -8,11 +8,11 @@ base_url = "http://127.0.0.1:8000"
 def run_suite():
     print("==========================================================================")
     print("ACADEMIA VALIDATOR TN SSLC MARKSHEET VERIFICATION SUITE")
-    print("Target Record: Certificate ID 24353750 (Reg: 53959247 / ANGULAKSHMI T)")
+    print("Target Record: Certificate ID 88880001 (Reg: 77770001 / ANGULAKSHMI T)")
     print("==========================================================================")
 
-    # 1. Test Genuine SSLC Marksheet Preset (24353750)
-    print("\n--- 1. Testing Genuine SSLC Marksheet (24353750 / ANGULAKSHMI T) ---")
+    # 1. Test Genuine SSLC Marksheet Preset (88880001)
+    print("\n--- 1. Testing Genuine SSLC Marksheet (88880001 / ANGULAKSHMI T) ---")
     data = urllib.parse.urlencode({'preset_type': 'tn_sslc_genuine'}).encode('utf-8')
     req = urllib.request.Request(f"{base_url}/api/verify/marksheet", data=data)
     res = urllib.request.urlopen(req)
@@ -51,7 +51,7 @@ def run_suite():
     assert len(j2['discrepancies']) > 0, "Discrepancy in total marks must be detected"
 
     print("\n==========================================================================")
-    print("[SUCCESS] RECORD 24353750 (ANGULAKSHMI T) VERIFICATION SUITE 100% PASSED!")
+    print("[SUCCESS] RECORD 88880001 (ANGULAKSHMI T) VERIFICATION SUITE 100% PASSED!")
     print("   OCR Consistency: 20/20 | Registry Match: 15/15 | QR Verification: 15/15")
     print("   Total Score: 50/50 (100% VERIFIED)")
     print("==========================================================================")

@@ -1,20 +1,20 @@
 /**
  * Node.js Seed script for AcademiaValidator Registry Database
- * Certificate ID : 24353750
- * Register No    : 53959247
+ * Certificate ID : 88880001
+ * Register No    : 77770001
  * Student Name   : ANGULAKSHMI T
  */
 
 const path = require('path');
 const crypto = require('crypto');
 
-const qrPayload = "TNSSLC|24353750|53959247|ANGULAKSHMI T|APR 2023";
+const qrPayload = "TNSSLC|88880001|77770001|ANGULAKSHMI T|APR 2023";
 const qrPayloadHash = crypto.createHash("sha256").update(qrPayload).digest("hex");
 
 console.log("=================================================");
 console.log("AcademiaValidator Database Seed Script (Node.js)");
 console.log("=================================================");
-console.log("Target Record: Certificate ID 24353750 (ANGULAKSHMI T)");
+console.log("Target Record: Certificate ID 88880001 (ANGULAKSHMI T)");
 console.log(`Generated SHA-256 QR Hash: ${qrPayloadHash}`);
 
 try {
@@ -48,8 +48,8 @@ try {
     `);
 
     stmt.run(
-      "24353750",
-      "53959247",
+      "88880001",
+      "77770001",
       "ANGULAKSHMI T",
       "07/07/2007",
       "THANGARAJ A",
@@ -63,7 +63,7 @@ try {
     );
 
     stmt.finalize();
-    console.log("[SUCCESS] Seeded record '24353750' successfully into SQLite DB!");
+    console.log("[SUCCESS] Seeded record '88880001' successfully into SQLite DB!");
   });
 
   db.close();

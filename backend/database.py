@@ -115,13 +115,13 @@ def init_db():
         """, record)
 
     # Seed SSLC Marksheet Record
-    qr_payload = "TNSSLC|24353750|53959247|ANGULAKSHMI T|APR 2023"
+    qr_payload = "TNSSLC|88880001|77770001|ANGULAKSHMI T|APR 2023"
     qr_hash = hashlib.sha256(qr_payload.encode('utf-8')).hexdigest()
 
     tn_seed_records = [
         (
-            "24353750",
-            "53959247",
+            "88880001",
+            "77770001",
             "ANGULAKSHMI T",
             "07/07/2007",
             "THANGARAJ A",
