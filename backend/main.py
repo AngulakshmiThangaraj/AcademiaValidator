@@ -1,4 +1,11 @@
+import sys
 import os
+
+# Ensure backend directory is in Python sys.path for Vercel serverless imports
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
 import io
 import json
 import base64
@@ -10,7 +17,7 @@ from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from PIL import Image
 import numpy as np
 
-# Import backend modules
+# Import backend modules safely
 from database import init_db, get_certificate_by_id, get_certificate_by_reg_no, register_certificate, log_verification, get_recent_logs
 from security import compute_image_sha256, decode_qr_code, verify_qr_and_id, generate_secure_qr
 from ocr_engine import perform_ocr, parse_certificate_fields
@@ -56,7 +63,6 @@ async def process_verification(file: UploadFile = None, preset_type: str = Form(
             if file is None:
                 raise HTTPException(status_code=400, detail="Invalid document request. Please upload a certificate image or select a preset.")
             
-            # Check filename extension
             ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
             if ext and ext not in [".jpg", ".jpeg", ".png", ".webp", ".pdf"]:
                 raise HTTPException(status_code=400, detail="Invalid document format. Please upload PDF, JPG, PNG, or WEBP.")
@@ -75,7 +81,7 @@ async def process_verification(file: UploadFile = None, preset_type: str = Form(
         # 1. SHA-256 Document Fingerprint
         doc_sha256 = compute_image_sha256(image_bytes)
 
-        # 2. AI Forgery Classification (PyTorch / ELA Fallback Classifier)
+        # 2. AI Forgery Classification
         ai_label, genuine_prob, suspicious_prob = classify_certificate(pil_image)
 
         # 3. QR Code Payload Decoding & Registry DB Match
