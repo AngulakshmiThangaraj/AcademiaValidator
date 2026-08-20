@@ -29,36 +29,6 @@ function switchTab(tabId) {
   }
 }
 
-// 1-Click Preset Scenario Trigger
-async function runPreset(type) {
-  startProcessingAnimation();
-
-  try {
-    const formData = new FormData();
-    formData.append('preset_type', type);
-
-    const targetEndpoint = type.startsWith('tn_sslc') ? `${API_BASE}/api/verify/marksheet` : `${API_BASE}/api/verify`;
-
-    const response = await fetch(targetEndpoint, {
-      method: 'POST',
-      body: formData
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`API Error ${response.status}: ${errText}`);
-    }
-
-    const data = await response.json();
-    currentVerificationData = data;
-    renderResults(data);
-  } catch (err) {
-    alert("Verification failed: " + err.message);
-  } finally {
-    stopProcessingAnimation();
-  }
-}
-
 // Drag & Drop File Upload Handler
 function handleFileSelect(event) {
   const files = event.target.files;
@@ -96,7 +66,8 @@ async function uploadFile(file) {
 
 // Step-by-Step Scanner Animation
 function startProcessingAnimation() {
-  document.getElementById('scanner-line').style.display = 'block';
+  const scannerLine = document.getElementById('scanner-line');
+  if (scannerLine) scannerLine.style.display = 'block';
   
   let step = 1;
   const interval = setInterval(() => {
@@ -112,7 +83,8 @@ function startProcessingAnimation() {
 }
 
 function stopProcessingAnimation() {
-  document.getElementById('scanner-line').style.display = 'none';
+  const scannerLine = document.getElementById('scanner-line');
+  if (scannerLine) scannerLine.style.display = 'none';
   for (let i = 1; i <= 6; i++) {
     const el = document.getElementById(`step-${i}`);
     if (el) {
@@ -131,186 +103,199 @@ function renderResults(data) {
   const hashStatus = document.getElementById('hash-match-status');
 
   const scorePct = data.percentage !== undefined ? data.percentage : data.authenticity_score;
-  scoreVal.textContent = `${scorePct}%`;
+  if (scoreVal) scoreVal.textContent = `${scorePct}%`;
 
   const statusStr = data.status || 'VERIFIED';
-  verdictTag.textContent = `STATUS: ${statusStr.replace('_', ' ')}`;
-
-  if (statusStr === 'VERIFIED') {
-    verdictTag.className = 'verdict-tag verified';
-    scoreCircle.style.background = `conic-gradient(#10b981 ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
-  } else if (statusStr === 'PARTIALLY_VERIFIED' || statusStr === 'REVIEW_REQUIRED') {
-    verdictTag.className = 'verdict-tag warning';
-    verdictTag.style.background = 'rgba(245, 158, 11, 0.2)';
-    verdictTag.style.color = '#fde68a';
-    scoreCircle.style.background = `conic-gradient(#f59e0b ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
-  } else {
-    verdictTag.className = 'verdict-tag suspicious';
-    scoreCircle.style.background = `conic-gradient(#ef4444 ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+  if (verdictTag) {
+    verdictTag.textContent = `STATUS: ${statusStr.replace('_', ' ')}`;
+    if (statusStr === 'VERIFIED') {
+      verdictTag.className = 'verdict-tag verified';
+      if (scoreCircle) scoreCircle.style.background = `conic-gradient(#10b981 ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+    } else if (statusStr === 'PARTIALLY_VERIFIED' || statusStr === 'REVIEW_REQUIRED') {
+      verdictTag.className = 'verdict-tag warning';
+      verdictTag.style.background = 'rgba(245, 158, 11, 0.2)';
+      verdictTag.style.color = '#fde68a';
+      if (scoreCircle) scoreCircle.style.background = `conic-gradient(#f59e0b ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+    } else {
+      verdictTag.className = 'verdict-tag suspicious';
+      if (scoreCircle) scoreCircle.style.background = `conic-gradient(#ef4444 ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+    }
   }
 
-  if (data.qr_verified || data.hash_matched_in_registry) {
-    hashStatus.textContent = "✓ SHA-256 & Registry Hash Verified";
-    hashStatus.style.color = "var(--success-green)";
-  } else {
-    hashStatus.textContent = "✗ Registry Hash Mismatch / Unverified";
-    hashStatus.style.color = "var(--danger-red)";
+  if (hashStatus) {
+    if (data.qr_verified || data.hash_matched_in_registry) {
+      hashStatus.textContent = "✓ SHA-256 & Registry Hash Verified";
+      hashStatus.style.color = "var(--success-green)";
+    } else {
+      hashStatus.textContent = "✗ Registry Hash Mismatch / Unverified";
+      hashStatus.style.color = "var(--danger-red)";
+    }
   }
 
   // 2. Score Factor Breakdown Bars
   const scores = data.scores || {};
   const bd = data.score_breakdown || {};
 
-  const ocrPts = scores.ocr_consistency !== undefined ? scores.ocr_consistency : bd.ocr_consistency_score;
-  document.getElementById('score-ocr').textContent = `${ocrPts} / 20.0`;
-  document.getElementById('bar-ocr').style.width = `${(ocrPts / 20.0) * 100}%`;
+  const ocrPts = scores.ocr_consistency !== undefined ? scores.ocr_consistency : (bd.ocr_consistency_score || 0);
+  const elOcr = document.getElementById('score-ocr');
+  const barOcr = document.getElementById('bar-ocr');
+  if (elOcr) elOcr.textContent = `${ocrPts} / 20.0`;
+  if (barOcr) barOcr.style.width = `${(ocrPts / 20.0) * 100}%`;
 
-  const regPts = scores.registry_match !== undefined ? scores.registry_match : bd.id_hash_score;
-  document.getElementById('score-id').textContent = `${regPts} / 15.0`;
-  document.getElementById('bar-id').style.width = `${(regPts / 15.0) * 100}%`;
+  const regPts = scores.registry_match !== undefined ? scores.registry_match : (bd.id_hash_score || 0);
+  const elReg = document.getElementById('score-registry') || document.getElementById('score-id');
+  const barReg = document.getElementById('bar-registry') || document.getElementById('bar-id');
+  if (elReg) elReg.textContent = `${regPts} / 15.0`;
+  if (barReg) barReg.style.width = `${(regPts / 15.0) * 100}%`;
 
-  const qrPts = scores.qr_verification !== undefined ? scores.qr_verification : bd.qr_validity_score;
-  document.getElementById('score-qr').textContent = `${qrPts} / 15.0`;
-  document.getElementById('bar-qr').style.width = `${(qrPts / 15.0) * 100}%`;
+  const qrPts = scores.qr_verification !== undefined ? scores.qr_verification : (bd.qr_validity_score || 0);
+  const elQr = document.getElementById('score-qr');
+  const barQr = document.getElementById('bar-qr');
+  if (elQr) elQr.textContent = `${qrPts} / 15.0`;
+  if (barQr) barQr.style.width = `${(qrPts / 15.0) * 100}%`;
 
-  const elaPts = bd.ela_forensics_score !== undefined ? bd.ela_forensics_score : '--';
-  document.getElementById('score-ela').textContent = `${elaPts}`;
-  document.getElementById('bar-ela').style.width = `${typeof elaPts === 'number' ? (elaPts / 15.0) * 100 : 80}%`;
-
-  // 3. Image Viewer
-  switchViewerTab('orig');
-
-  // 4. Extracted Metadata Table
-  const tableBody = document.getElementById('metadata-table-body');
-  tableBody.innerHTML = '';
-
-  const fieldsList = [
-    { key: 'certificate_id', label: 'Certificate ID' },
-    { key: 'register_no', label: 'Register Number' },
-    { key: 'student_name', label: 'Student Name' },
-    { key: 'dob', label: 'Date of Birth (DOB)' },
-    { key: 'total_marks', label: 'Total Marks' },
-    { key: 'father_name', label: "Father's Name" },
-    { key: 'passing_year', label: 'Passing Year' }
-  ];
-
-  const dbRec = data.registry_record || data.database_registry_record || {};
-  const extractedObj = data.ocr_debug_info?.extracted_fields || data.extracted_ocr_fields || {};
-
-  fieldsList.forEach(f => {
-    const tr = document.createElement('tr');
-    
-    let extValObj = extractedObj[f.key];
-    let extVal = 'Not Extracted';
-    let confStr = '';
-    if (extValObj && typeof extValObj === 'object') {
-      extVal = extValObj.value !== null && extValObj.value !== undefined ? extValObj.value : 'Not Extracted';
-      if (extValObj.confidence) {
-        confStr = ` (${Math.round(extValObj.confidence * 100)}%)`;
-      }
-    } else if (extValObj) {
-      extVal = extValObj;
-    }
-
-    let dbVal = dbRec[f.key] || dbRec['cert_id'] || 'Not Registered';
-    if (f.key === 'certificate_id') dbVal = dbRec['certificate_id'] || dbRec['cert_id'] || 'Not Registered';
-    if (f.key === 'total_marks') dbVal = dbRec['total_marks'] || dbRec['cgpa'] || 'Not Registered';
-
-    let isMatched = false;
-    if (data.matched_fields && data.matched_fields.includes(f.key)) {
-      isMatched = true;
-    } else if (extVal !== 'Not Extracted' && dbVal !== 'Not Registered') {
-      if (String(extVal).toLowerCase().replace(/\s/g, '').includes(String(dbVal).toLowerCase().replace(/\s/g, ''))) {
-        isMatched = true;
-      }
-    }
-
-    tr.innerHTML = `
-      <td style="font-weight: 600;">${f.label}</td>
-      <td>${extVal}${confStr}</td>
-      <td>${dbVal}</td>
-      <td>
-        <span class="match-tag ${isMatched ? 'match' : 'mismatch'}">
-          ${isMatched ? 'MATCH ✓' : 'DISCREPANCY ✗'}
-        </span>
-      </td>
-    `;
-    tableBody.appendChild(tr);
-  });
-
-  // 5. Explainable Report Bullets & Discrepancies
-  const explanationEl = document.getElementById('explanation-text');
-  if (explanationEl) {
-    explanationEl.textContent = data.explanation || 'Verification scan completed successfully.';
+  // 3. Explainable Report & Discrepancies
+  const reportBox = document.getElementById('explainable-report-box');
+  const reportText = document.getElementById('report-text');
+  if (reportText) {
+    reportText.textContent = data.explanation || 'Verification scan completed successfully.';
   }
 
-  const bulletList = document.getElementById('report-bullets-list');
-  bulletList.innerHTML = '';
+  const fieldsCard = document.getElementById('fields-verification-card');
+  const matchedContainer = document.getElementById('matched-chips');
+  const discSection = document.getElementById('discrepancies-section');
+  const discTbody = document.getElementById('discrepancy-rows');
 
-  const reportItems = [];
-  if (data.matched_fields && data.matched_fields.length > 0) {
-    reportItems.push(`✓ Verified Matched Fields: ${data.matched_fields.join(', ')}`);
-  }
-  if (data.discrepancies && data.discrepancies.length > 0) {
-    data.discrepancies.forEach(d => {
-      reportItems.push(`✗ Discrepancy in ${d.field}: OCR '${d.ocr_value}' vs Registry '${d.registry_value}' (${d.reason})`);
-    });
-  }
-  if (data.explainable_report) {
-    data.explainable_report.forEach(b => reportItems.push(b));
-  }
+  if (fieldsCard) fieldsCard.classList.remove('hidden');
 
-  reportItems.forEach(bullet => {
-    const li = document.createElement('li');
-    li.textContent = bullet;
-    if (bullet.startsWith('✓')) {
-      li.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-      li.style.color = '#a7f3d0';
-    } else if (bullet.startsWith('✗')) {
-      li.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-      li.style.color = '#fca5a5';
+  if (matchedContainer) {
+    matchedContainer.innerHTML = '';
+    const matched = data.matched_fields || [];
+    if (matched.length > 0) {
+      matched.forEach(f => {
+        const chip = document.createElement('span');
+        chip.className = 'matched-chip';
+        chip.style.cssText = 'display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success-green); padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin: 0.2rem;';
+        chip.innerHTML = `<i class="fa-solid fa-check"></i> ${f.replace('_', ' ').toUpperCase()}`;
+        matchedContainer.appendChild(chip);
+      });
     } else {
-      li.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-      li.style.color = '#fde68a';
+      matchedContainer.innerHTML = '<span style="font-size: 0.8rem; color: var(--text-dim);">No exact matching fields.</span>';
     }
-    bulletList.appendChild(li);
-  });
+  }
 
-  // 6. OCR Debug Information Fill
-  if (data.ocr_debug_info) {
-    const dbg = data.ocr_debug_info;
-    document.getElementById('debug-engine').textContent = dbg.ocr_engine_info?.engine_used || 'Dictionary Fallback Parser';
-    document.getElementById('debug-rec-id').textContent = dbg.matching_record_id || 'None';
-    document.getElementById('debug-qr-payload').textContent = JSON.stringify(dbg.qr_debug?.payload || dbg.qr_debug || {}, null, 2);
-    document.getElementById('debug-raw-ocr').textContent = dbg.raw_text || 'Raw text processed.';
+  if (discSection && discTbody) {
+    discTbody.innerHTML = '';
+    const discs = data.discrepancies || [];
+    if (discs.length > 0) {
+      discSection.classList.remove('hidden');
+      discs.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight: 600; color: var(--warning-amber);">${d.field}</td>
+          <td style="color: var(--danger-red);">${d.ocr_value}</td>
+          <td style="color: var(--success-green);">${d.registry_value}</td>
+          <td style="font-size: 0.8rem; color: var(--text-muted);">${d.reason}</td>
+        `;
+        discTbody.appendChild(tr);
+      });
+    } else {
+      discSection.classList.add('hidden');
+    }
+  }
+
+  // 4. Image Viewer Rendering
+  const imgOrig = document.getElementById('img-original');
+  const imgEla = document.getElementById('img-ela');
+  const imgAnnot = document.getElementById('img-annotated');
+  
+  const phOrig = document.getElementById('ph-orig');
+  const phEla = document.getElementById('ph-ela');
+  const phAnnot = document.getElementById('ph-annotated');
+
+  const imgs = data.images || {};
+  if (imgOrig && imgs.original_b64) {
+    imgOrig.src = imgs.original_b64;
+    imgOrig.style.display = 'block';
+    if (phOrig) phOrig.style.display = 'none';
+  }
+  if (imgEla && imgs.ela_heatmap_b64) {
+    imgEla.src = imgs.ela_heatmap_b64;
+    imgEla.style.display = 'block';
+    if (phEla) phEla.style.display = 'none';
+  }
+  if (imgAnnot && imgs.annotated_suspicious_b64) {
+    imgAnnot.src = imgs.annotated_suspicious_b64;
+    imgAnnot.style.display = 'block';
+    if (phAnnot) phAnnot.style.display = 'none';
+  }
+
+  // 5. Suspicious Regions List Rendering
+  const suspiciousContainer = document.getElementById('suspicious-regions-items');
+  if (suspiciousContainer) {
+    suspiciousContainer.innerHTML = '';
+    const forensics = data.forensics || {};
+    const regions = forensics.suspicious_regions || [];
+    if (regions.length > 0) {
+      regions.forEach(r => {
+        const item = document.createElement('div');
+        item.style.cssText = 'background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 0.5rem 0.75rem; margin-bottom: 0.4rem; font-size: 0.8rem;';
+        item.innerHTML = `<strong style="color: var(--danger-red);">${r.reason || 'Anomaly Detected'}</strong> - Severity: ${r.severity || 'MEDIUM'}`;
+        suspiciousContainer.appendChild(item);
+      });
+    } else {
+      suspiciousContainer.innerHTML = '<div style="font-size: 0.8rem; color: var(--success-green);"><i class="fa-solid fa-circle-check"></i> No suspicious compression or font anomalies detected.</div>';
+    }
+  }
+
+  // 6. Expandable OCR & QR Debug technical details
+  const dbgOcr = document.getElementById('debug-ocr-json');
+  const dbgQr = document.getElementById('debug-qr-json');
+  if (dbgOcr && data.ocr_debug_info) {
+    dbgOcr.textContent = JSON.stringify(data.ocr_debug_info.extracted_fields || {}, null, 2);
+  }
+  if (dbgQr && data.ocr_debug_info) {
+    dbgQr.textContent = JSON.stringify(data.ocr_debug_info.qr_debug || {}, null, 2);
   }
 }
 
 // Viewer Tab Switcher
 function switchViewerTab(tabType) {
   currentActiveTab = tabType;
-  const viewerImg = document.getElementById('viewer-img');
 
-  ['orig', 'ela', 'annot'].forEach(t => {
-    const btn = document.getElementById(`tab-${t}`);
-    if (btn) {
+  ['orig', 'ela', 'annotated'].forEach(t => {
+    const box = document.getElementById(`view-img-${t}`);
+    if (box) {
       if (t === tabType) {
-        btn.classList.add('active');
+        box.classList.add('active');
+        box.style.display = 'block';
       } else {
-        btn.classList.remove('active');
+        box.classList.remove('active');
+        box.style.display = 'none';
       }
     }
   });
 
-  if (!currentVerificationData) return;
+  document.querySelectorAll('.viewer-tab').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabType)) {
+      btn.classList.add('active');
+    }
+  });
+}
 
-  const imgs = currentVerificationData.images || {};
-  if (tabType === 'orig') {
-    viewerImg.src = imgs.original_b64 || '';
-  } else if (tabType === 'ela') {
-    viewerImg.src = imgs.ela_heatmap_b64 || '';
-  } else if (tabType === 'annot') {
-    viewerImg.src = imgs.annotated_suspicious_b64 || '';
+// Toggle Debug Accordion
+function toggleDebugAccordion() {
+  const body = document.getElementById('debug-content-body');
+  const icon = document.getElementById('accordion-icon');
+  if (body) {
+    if (body.classList.contains('hidden')) {
+      body.classList.remove('hidden');
+      if (icon) icon.className = 'fa-solid fa-chevron-up';
+    } else {
+      body.classList.add('hidden');
+      if (icon) icon.className = 'fa-solid fa-chevron-down';
+    }
   }
 }
 
@@ -320,16 +305,25 @@ async function fetchModelMetrics() {
     const response = await fetch(`${API_BASE}/api/metrics`);
     if (response.ok) {
       const m = await response.json();
-      document.getElementById('metric-acc').textContent = `${(m.accuracy * 100).toFixed(1)}%`;
-      document.getElementById('metric-prec').textContent = `${(m.precision * 100).toFixed(1)}%`;
-      document.getElementById('metric-rec').textContent = `${(m.recall * 100).toFixed(1)}%`;
-      document.getElementById('metric-f1').textContent = `${(m.f1_score * 100).toFixed(1)}%`;
+      const elAcc = document.getElementById('metric-accuracy');
+      const elPrec = document.getElementById('metric-precision');
+      const elRec = document.getElementById('metric-recall');
+      const elF1 = document.getElementById('metric-f1');
+
+      if (elAcc) elAcc.textContent = `${(m.accuracy * 100).toFixed(1)}%`;
+      if (elPrec) elPrec.textContent = `${(m.precision * 100).toFixed(1)}%`;
+      if (elRec) elRec.textContent = `${(m.recall * 100).toFixed(1)}%`;
+      if (elF1) elF1.textContent = `${(m.f1_score * 100).toFixed(1)}%`;
 
       if (m.confusion_matrix) {
-        document.getElementById('cm-00').textContent = m.confusion_matrix[0][0];
-        document.getElementById('cm-01').textContent = m.confusion_matrix[0][1];
-        document.getElementById('cm-10').textContent = m.confusion_matrix[1][0];
-        document.getElementById('cm-11').textContent = m.confusion_matrix[1][1];
+        const cmTp = document.getElementById('cm-tp');
+        const cmFn = document.getElementById('cm-fn');
+        const cmFp = document.getElementById('cm-fp');
+        const cmTn = document.getElementById('cm-tn');
+        if (cmTp) cmTp.textContent = `${m.confusion_matrix[0][0]} (TP)`;
+        if (cmFn) cmFn.textContent = `${m.confusion_matrix[0][1]} (FN)`;
+        if (cmFp) cmFp.textContent = `${m.confusion_matrix[1][0]} (FP)`;
+        if (cmTn) cmTn.textContent = `${m.confusion_matrix[1][1]} (TN)`;
       }
     }
   } catch (err) {
