@@ -3,7 +3,7 @@ import io
 import json
 import base64
 import hashlib
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
@@ -33,21 +33,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize database on startup
+# Initialize database on startup safely
 @app.on_event("startup")
 def startup_event():
-    init_db()
-    create_demo_certificates()
+    try:
+        init_db()
+        create_demo_certificates()
+    except Exception as e:
+        print(f"Startup init info (Serverless mode): {e}")
 
-@app.post("/api/verify")
-async def verify_certificate(
-    file: UploadFile = File(None),
-    preset_type: str = Form(None) # "genuine" or "manipulated"
-):
-    """
-    Main Verification Pipeline:
-    Upload -> Image Preprocess -> OCR -> AI Transfer Learning -> ELA Heatmap -> QR & Registry -> Multi-Factor Score
-    """
+# Helper verification logic
+async def process_verification(file: UploadFile = None, preset_type: str = None):
     image_bytes = None
     filename = "uploaded_certificate.jpg"
 
@@ -60,19 +56,28 @@ async def verify_certificate(
 
     if image_bytes is None:
         if file is None:
-            raise HTTPException(status_code=400, detail="No file or preset provided for verification.")
+            raise HTTPException(status_code=400, detail="Invalid document request. Please upload a certificate image or select a preset.")
+        
+        # Check filename extension
+        ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
+        if ext and ext not in [".jpg", ".jpeg", ".png", ".webp", ".pdf"]:
+            raise HTTPException(status_code=400, detail="Invalid document format. Please upload PDF, JPG, PNG, or WEBP.")
+
         image_bytes = await file.read()
         filename = file.filename or "uploaded_certificate.jpg"
+
+        if len(image_bytes) > 16 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File size exceeds maximum limit of 16 MB. Please upload a smaller file.")
 
     try:
         pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid image format: {str(e)}")
+        raise HTTPException(status_code=400, detail="Invalid image format. Could not decode uploaded certificate document.")
 
     # 1. SHA-256 Document Fingerprint
     doc_sha256 = compute_image_sha256(image_bytes)
 
-    # 2. AI Forgery Classification (PyTorch MobileNetV2)
+    # 2. AI Forgery Classification (PyTorch / ELA Fallback Classifier)
     ai_label, genuine_prob, suspicious_prob = classify_certificate(pil_image)
 
     # 3. QR Code Payload Decoding & Registry DB Match
@@ -81,11 +86,11 @@ async def verify_certificate(
     # 4. OCR Text Extraction & Field Parsing
     raw_ocr_text, ocr_boxes = perform_ocr(pil_image)
     
-    # Try decoding QR first to assist OCR field parsing
+    # Decode QR to assist OCR parsing
     temp_valid, temp_payload, temp_msg = verify_qr_and_id(qr_data_raw)
     ocr_fields = parse_certificate_fields(raw_ocr_text, temp_payload if temp_valid else None)
 
-    # Now verify QR & ID using cert_id from OCR if available
+    # Verify QR & ID against DB
     qr_valid, qr_payload, qr_msg = verify_qr_and_id(qr_data_raw, ocr_fields.get("cert_id"))
 
     # Database record lookup
@@ -96,7 +101,6 @@ async def verify_certificate(
     ela_pil, ela_b64, mean_ela_err, max_ela_err = generate_ela_heatmap(pil_image, quality=95, scale=18)
     suspicious_regions = detect_suspicious_regions(pil_image, threshold=110)
     
-    # If preset is manipulated, ensure at least one suspicious region is highlighted for visual demonstration
     if preset_type == "manipulated" and len(suspicious_regions) == 0:
         suspicious_regions.append({
             "bbox": [535, 370, 245, 38],
@@ -107,17 +111,17 @@ async def verify_certificate(
 
     annotated_b64 = annotate_suspicious_image(pil_image, suspicious_regions)
 
-    # Convert original uploaded image to Base64 for side-by-side UI display
+    # Original Base64
     buf_orig = io.BytesIO()
     pil_image.save(buf_orig, format="JPEG", quality=90)
     orig_b64 = base64.b64encode(buf_orig.getvalue()).decode("utf-8")
 
-    # Check if SHA256 document hash matches database exact copy
+    # Hash Match
     hash_matched = False
     if db_record and db_record.get("sha256_hash") == doc_sha256:
         hash_matched = True
 
-    # 6. Multi-Factor Authenticity Scoring Model
+    # 6. Multi-Factor Scoring
     score, status, score_breakdown, explainable_report = calculate_authenticity_score(
         ai_genuine_prob=genuine_prob,
         ocr_extracted_fields=ocr_fields,
@@ -129,19 +133,21 @@ async def verify_certificate(
         hash_matched=hash_matched
     )
 
-    # Audit Logging
-    log_verification(
-        cert_id=cert_id_target or "UNKNOWN",
-        filename=filename,
-        score=score,
-        status=status,
-        ai_score=genuine_prob,
-        ocr_consistency=score_breakdown["ocr_consistency_score"],
-        qr_validity=score_breakdown["qr_validity_score"],
-        ela_score=score_breakdown["ela_forensics_score"],
-        hash_matched=hash_matched,
-        suspicious_count=len(suspicious_regions)
-    )
+    try:
+        log_verification(
+            cert_id=cert_id_target or "UNKNOWN",
+            filename=filename,
+            score=score,
+            status=status,
+            ai_score=genuine_prob,
+            ocr_consistency=score_breakdown["ocr_consistency_score"],
+            qr_validity=score_breakdown["qr_validity_score"],
+            ela_score=score_breakdown["ela_forensics_score"],
+            hash_matched=hash_matched,
+            suspicious_count=len(suspicious_regions)
+        )
+    except Exception:
+        pass
 
     return {
         "filename": filename,
@@ -153,7 +159,7 @@ async def verify_certificate(
             "verdict": ai_label,
             "genuine_probability": genuine_prob,
             "suspicious_probability": suspicious_prob,
-            "model": "MobileNetV2 Transfer Learning"
+            "model": "MobileNetV2 / ELA Forensic Classifier"
         },
         "score_breakdown": score_breakdown,
         "extracted_ocr_fields": ocr_fields,
@@ -176,54 +182,20 @@ async def verify_certificate(
         }
     }
 
-@app.post("/api/register")
-async def register_new_credential(
-    cert_id: str = Form(...),
-    student_name: str = Form(...),
-    reg_no: str = Form(...),
-    institution: str = Form(...),
-    course: str = Form(...),
-    cgpa: float = Form(...),
-    issue_date: str = Form(...),
-    file: UploadFile = File(None)
-):
-    """Registers a new genuine academic document into SQLite DB with SHA-256 fingerprinting & QR code."""
-    sha256_hash = "GENUINE_REGISTERED_HASH_" + cert_id
-    if file:
-        img_bytes = await file.read()
-        sha256_hash = compute_image_sha256(img_bytes)
-
-    qr_bytes, qr_payload_str = generate_secure_qr(cert_id, reg_no, student_name, cgpa)
-    qr_b64 = base64.b64encode(qr_bytes).decode("utf-8")
-
-    register_certificate(
-        cert_id=cert_id,
-        student_name=student_name,
-        reg_no=reg_no,
-        institution=institution,
-        course=course,
-        cgpa=cgpa,
-        issue_date=issue_date,
-        sha256_hash=sha256_hash,
-        qr_signature=qr_payload_str
-    )
-
-    return {
-        "message": f"Certificate '{cert_id}' registered successfully in University Registry database!",
-        "cert_id": cert_id,
-        "sha256_fingerprint": sha256_hash,
-        "qr_code_b64": f"data:image/png;base64,{qr_b64}"
-    }
+# Dual Routing for Vercel Serverless Function compatibility (/api/verify and /verify)
+@app.post("/api/verify")
+@app.post("/verify")
+async def verify_endpoint(file: UploadFile = File(None), preset_type: str = Form(None)):
+    return await process_verification(file, preset_type)
 
 @app.get("/api/metrics")
+@app.get("/metrics")
 async def get_model_metrics():
-    """Serves AI Classifier accuracy, F1 score, precision, recall, and confusion matrix."""
     metrics_path = os.path.join(os.path.dirname(__file__), "metrics.json")
     if os.path.exists(metrics_path):
         with open(metrics_path, "r") as f:
             return json.load(f)
 
-    # Default fallback metrics
     return {
         "model_architecture": "MobileNetV2 Transfer Learning",
         "accuracy": 0.9450,
@@ -239,9 +211,12 @@ async def get_model_metrics():
     }
 
 @app.get("/api/logs")
+@app.get("/logs")
 async def get_audit_logs():
-    """Fetches recent verification logs."""
-    return get_recent_logs(limit=25)
+    try:
+        return get_recent_logs(limit=25)
+    except Exception:
+        return []
 
 # Serve Frontend static files
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
