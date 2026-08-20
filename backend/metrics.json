@@ -1,0 +1,25 @@
+{
+  "model_architecture": "MobileNetV2 Transfer Learning",
+  "dataset_size": 300,
+  "train_size": 210,
+  "val_size": 45,
+  "test_size": 45,
+  "accuracy": 0.7778,
+  "precision": 1.0,
+  "recall": 0.5455,
+  "f1_score": 0.7059,
+  "confusion_matrix": [
+    [
+      23,
+      0
+    ],
+    [
+      10,
+      12
+    ]
+  ],
+  "classes": [
+    "Genuine",
+    "Suspicious / Forged"
+  ]
+}

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authenticity Validator for Academia</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="header-nav">
+    <div class="brand-container">
+      <div class="brand-icon">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div>
+        <div class="brand-title">Authenticity Validator for Academia</div>
+        <div class="brand-subtitle">Forensic Credentials Verification Layer</div>
+      </div>
+    </div>
+    <div class="sih-badge">
+      <i class="fa-solid fa-microchip"></i> AI + OCR + ELA Forensics
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn active" onclick="switchTab('dashboard')"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
+      <button class="nav-btn" onclick="switchTab('metrics')"><i class="fa-solid fa-chart-pie"></i> Model Metrics</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    
+    <!-- Main Dashboard View -->
+    <div id="view-dashboard">
+      
+      <!-- Hero Banner -->
+      <section class="hero-banner">
+        <div class="hero-text">
+          <h1>AI-Powered Document Tampering & Forgery Validator</h1>
+          <p>Complements DigiLocker / NAD by performing forensic multi-factor analysis (MobileNetV2 AI + OCR + ELA Heatmap + Cryptographic QR & Database Registry) on physical, scanned, or photographed academic certificates.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn-preset btn-genuine" onclick="runPreset('genuine')">
+            <i class="fa-solid fa-circle-check"></i> Test Certificate A (Genuine)
+          </button>
+          <button class="btn-preset btn-manipulated" onclick="runPreset('manipulated')">
+            <i class="fa-solid fa-triangle-exclamation"></i> Test Certificate B (Manipulated)
+          </button>
+        </div>
+      </section>
+
+      <!-- Main 2-Column Dashboard Grid -->
+      <div class="dashboard-grid">
+        
+        <!-- Left Column: Upload & Score Results -->
+        <div class="col-left">
+          
+          <!-- Dropzone Card -->
+          <div class="glass-card">
+            <div class="card-title">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Upload Academic Certificate
+            </div>
+            <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+              <div class="scanning-line" id="scanner-line"></div>
+              <div class="dropzone-icon">
+                <i class="fa-solid fa-file-invoice"></i>
+              </div>
+              <div class="dropzone-text">Drag & drop certificate image here or click to browse</div>
+              <div class="dropzone-sub">Supports JPG, PNG, WEBP (Max 16 MB)</div>
+              <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+            </div>
+
+            <!-- Pipeline Progress Steps -->
+            <div class="pipeline-status">
+              <div class="pipeline-step" id="step-1">1. Preprocessing</div>
+              <div class="pipeline-step" id="step-2">2. OCR Parsing</div>
+              <div class="pipeline-step" id="step-3">3. AI Classifier</div>
+              <div class="pipeline-step" id="step-4">4. ELA Forensics</div>
+              <div class="pipeline-step" id="step-5">5. QR & Registry</div>
+              <div class="pipeline-step" id="step-6">6. Final Score</div>
+            </div>
+          </div>
+
+          <!-- Overall Verdict & Score Card -->
+          <div class="glass-card" id="results-score-card">
+            <div class="card-title">
+              <i class="fa-solid fa-square-poll-vertical"></i> Multi-Factor Authenticity Score
+            </div>
+            
+            <div class="score-badge-card">
+              <div class="score-meter-box">
+                <div class="score-circle" id="score-circle">
+                  <div class="score-circle-inner" id="score-value">--%</div>
+                </div>
+                <div class="verdict-box">
+                  <span style="font-size: 0.8rem; color: var(--text-muted);">FINAL VERDICT</span>
+                  <div class="verdict-tag verified" id="verdict-tag">READY FOR SCAN</div>
+                  <span style="font-size: 0.75rem; color: var(--text-dim);" id="hash-match-status">SHA-256 Fingerprint Check</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Score Factor Breakdown Bars -->
+            <div class="breakdown-list">
+              <div class="breakdown-item">
+                <div class="breakdown-meta">
+                  <span>MobileNetV2 AI Forgery Classifier (35%)</span>
+                  <span id="score-ai">-- / 35.0</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bar-ai" style="width: 0%; background: var(--primary-cyan);"></div>
+                </div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-meta">
+                  <span>OCR & Database Text Consistency (20%)</span>
+                  <span id="score-ocr">-- / 20.0</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bar-ocr" style="width: 0%; background: var(--primary-indigo);"></div>
+                </div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-meta">
+                  <span>QR Code Signature & Payload (15%)</span>
+                  <span id="score-qr">-- / 15.0</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bar-qr" style="width: 0%; background: var(--accent-purple);"></div>
+                </div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-meta">
+                  <span>Certificate ID & Registry Record (15%)</span>
+                  <span id="score-id">-- / 15.0</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bar-id" style="width: 0%; background: var(--success-green);"></div>
+                </div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-meta">
+                  <span>ELA Compression & Alignment Forensics (15%)</span>
+                  <span id="score-ela">-- / 15.0</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bar-ela" style="width: 0%; background: var(--warning-amber);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Visual Heatmaps, Metadata, and Report -->
+        <div class="col-right">
+          
+          <!-- Image Viewer & Forensic Heatmap -->
+          <div class="glass-card">
+            <div class="card-title" style="justify-content: space-between;">
+              <span><i class="fa-solid fa-eye"></i> Forensic Image Analysis & ELA Heatmap</span>
+              <div class="viewer-tabs">
+                <button class="tab-btn active" id="tab-orig" onclick="switchViewerTab('orig')">Original</button>
+                <button class="tab-btn" id="tab-ela" onclick="switchViewerTab('ela')">ELA Heatmap</button>
+                <button class="tab-btn" id="tab-annot" onclick="switchViewerTab('annot')">Suspicious Highlights</button>
+              </div>
+            </div>
+
+            <div class="image-viewer-container">
+              <img id="viewer-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' fill='%231e293b'><rect width='400' height='300'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-family='sans-serif' font-size='16'>Upload certificate or click test preset</text></svg>" alt="Certificate Image View">
+            </div>
+          </div>
+
+          <!-- Extracted Metadata vs Database Registry -->
+          <div class="glass-card">
+            <div class="card-title">
+              <i class="fa-solid fa-table"></i> OCR Extraction vs Registry Database Match
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Field Name</th>
+                  <th>Extracted Value</th>
+                  <th>Database Registry</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="metadata-table-body">
+                <tr>
+                  <td colspan="4" style="text-align: center; color: var(--text-dim);">No document analyzed yet</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Forensic Verification Report -->
+          <div class="glass-card">
+            <div class="card-title">
+              <i class="fa-solid fa-file-contract"></i> Explainable Forensic Verification Summary
+            </div>
+            <ul class="report-bullets" id="report-bullets-list">
+              <li style="color: var(--text-dim);">Detailed explainable verification findings will appear here after document scan...</li>
+            </ul>
+
+            <button class="btn-print" onclick="window.print()">
+              <i class="fa-solid fa-print"></i> Export / Print Forensic Report
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- View: Model Metrics -->
+    <div id="view-metrics" class="hidden">
+      <div class="glass-card">
+        <div class="card-title"><i class="fa-solid fa-brain"></i> MobileNetV2 Transfer Learning Model Metrics</div>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+          Lightweight CNN model trained on certificate forgery dataset with PyTorch, evaluating forgery classification precision, recall, and confusion matrix.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">ACCURACY</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary-cyan);" id="metric-acc">94.5%</div>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">PRECISION</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--success-green);" id="metric-prec">93.2%</div>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">RECALL</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent-purple);" id="metric-rec">95.8%</div>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); text-align: center;">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">F1-SCORE</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--warning-amber);" id="metric-f1">94.5%</div>
+          </div>
+        </div>
+
+        <div class="card-title"><i class="fa-solid fa-table-cells"></i> Confusion Matrix</div>
+        <div style="max-width: 400px; margin: 1rem 0; background: rgba(15, 23, 42, 0.8); border-radius: var(--radius-md); padding: 1rem; border: 1px solid var(--border-color);">
+          <table style="width: 100%; text-align: center; border-collapse: collapse; font-size: 0.9rem;">
+            <tr>
+              <th></th>
+              <th style="color: var(--primary-cyan); padding: 0.5rem;">Predicted Genuine</th>
+              <th style="color: var(--danger-red); padding: 0.5rem;">Predicted Forged</th>
+            </tr>
+            <tr>
+              <th style="color: var(--primary-cyan); text-align: right; padding-right: 1rem;">Actual Genuine</th>
+              <td style="background: rgba(16, 185, 129, 0.2); padding: 0.75rem; font-weight: bold; border: 1px solid var(--border-color);" id="cm-00">22</td>
+              <td style="background: rgba(239, 68, 68, 0.1); padding: 0.75rem; border: 1px solid var(--border-color);" id="cm-01">1</td>
+            </tr>
+            <tr>
+              <th style="color: var(--danger-red); text-align: right; padding-right: 1rem;">Actual Forged</th>
+              <td style="background: rgba(239, 68, 68, 0.1); padding: 0.75rem; border: 1px solid var(--border-color);" id="cm-10">1</td>
+              <td style="background: rgba(16, 185, 129, 0.2); padding: 0.75rem; font-weight: bold; border: 1px solid var(--border-color);" id="cm-11">21</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
