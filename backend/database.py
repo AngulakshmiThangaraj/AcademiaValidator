@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import hashlib
 
 def get_db_path():
     custom_path = os.environ.get("DATABASE_PATH")
@@ -11,7 +12,6 @@ def get_db_path():
     if os.access(default_dir, os.W_OK):
         return os.path.join(default_dir, "sih_certificates.db")
     
-    # Fallback to system temp directory for serverless cloud environments
     import tempfile
     return os.path.join(tempfile.gettempdir(), "sih_certificates.db")
 
@@ -25,7 +25,7 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Table for Genuine Registered Certificates
+    # 1. Table for Genuine Registered Higher Ed Certificates
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS registered_certificates (
         cert_id TEXT PRIMARY KEY,
@@ -41,7 +41,32 @@ def init_db():
     );
     """)
 
-    # Table for Verification Audit Logs
+    # 2. Table for Tamil Nadu State Board SSLC / HSC Marksheets
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS tn_sslc_marksheets (
+        certificate_id TEXT PRIMARY KEY,
+        register_no TEXT NOT NULL,
+        student_name TEXT NOT NULL,
+        dob TEXT NOT NULL,
+        father_name TEXT,
+        mother_name TEXT,
+        institution TEXT NOT NULL,
+        course TEXT NOT NULL,
+        total_marks INTEGER NOT NULL,
+        result TEXT NOT NULL,
+        passing_year TEXT NOT NULL,
+        qr_payload_hash TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    # Create Indexes for fast lookup
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tn_cert_id ON tn_sslc_marksheets(certificate_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tn_reg_no ON tn_sslc_marksheets(register_no);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tn_name ON tn_sslc_marksheets(student_name);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tn_dob ON tn_sslc_marksheets(dob);")
+
+    # 3. Table for Verification Audit Logs
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS verification_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,7 +84,7 @@ def init_db():
     );
     """)
 
-    # Seed initial test genuine certificates
+    # Seed initial higher ed test genuine certificates
     seed_records = [
         (
             "CERT-2025-1001",
@@ -100,9 +125,112 @@ def init_db():
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, record)
 
+    # Seed Tamil Nadu SSLC Marksheet Sample Records
+    # Compute SHA-256 hash for sample QR payload
+    sample_qr_payload = '{"cert_id":"24353750","reg_no":"5191247","name":"ANGULAKSHMI T","dob":"14/06/2007","total_marks":451}'
+    sample_qr_hash = hashlib.sha256(sample_qr_payload.encode('utf-8')).hexdigest()
+
+    tn_seed_records = [
+        (
+            "24353750",
+            "5191247",
+            "ANGULAKSHMI T",
+            "14/06/2007",
+            "THANGARAJ M",
+            "LAKSHMI T",
+            "GOVT HIGHER SECONDARY SCHOOL, CHENNAI",
+            "SSLC (CLASS X)",
+            451,
+            "PASS",
+            "APR 2023",
+            sample_qr_hash
+        ),
+        (
+            "24353751",
+            "5191248",
+            "KARTHIK R",
+            "22/09/2006",
+            "RAMESH K",
+            "SARASWATHI R",
+            "ST. JOSEPH HIGHER SECONDARY SCHOOL, TRICHY",
+            "SSLC (CLASS X)",
+            482,
+            "PASS",
+            "APR 2023",
+            hashlib.sha256('{"cert_id":"24353751","reg_no":"5191248","name":"KARTHIK R","dob":"22/09/2006","total_marks":482}'.encode()).hexdigest()
+        ),
+        (
+            "24353752",
+            "5191249",
+            "MEENA S",
+            "05/11/2007",
+            "SUNDARAM P",
+            "KAVITHA S",
+            "BHARATHI GIRLS HIGH SCHOOL, MADURAI",
+            "SSLC (CLASS X)",
+            395,
+            "PASS",
+            "MARCH 2023",
+            hashlib.sha256('{"cert_id":"24353752","reg_no":"5191249","name":"MEENA S","dob":"05/11/2007","total_marks":395}'.encode()).hexdigest()
+        )
+    ]
+
+    for tn_record in tn_seed_records:
+        cursor.execute("""
+        INSERT OR IGNORE INTO tn_sslc_marksheets
+        (certificate_id, register_no, student_name, dob, father_name, mother_name, institution, course, total_marks, result, passing_year, qr_payload_hash)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, tn_record)
+
     conn.commit()
     conn.close()
-    print("Database initialized & seeded successfully!")
+    print("Database initialized & seeded with TN SSLC sample records successfully!")
+
+def get_tn_marksheet_by_id(cert_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tn_sslc_marksheets WHERE certificate_id = ?", (cert_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def get_tn_marksheet_by_reg_no(reg_no):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tn_sslc_marksheets WHERE register_no = ?", (reg_no,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def search_tn_marksheet(cert_id=None, reg_no=None, student_name=None, dob=None):
+    """Finds best matching registry record based on available search keys."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if cert_id:
+        cursor.execute("SELECT * FROM tn_sslc_marksheets WHERE certificate_id = ?", (str(cert_id).strip(),))
+        row = cursor.fetchone()
+        if row:
+            conn.close()
+            return dict(row)
+
+    if reg_no:
+        cursor.execute("SELECT * FROM tn_sslc_marksheets WHERE register_no = ?", (str(reg_no).strip(),))
+        row = cursor.fetchone()
+        if row:
+            conn.close()
+            return dict(row)
+
+    if student_name and dob:
+        clean_name = f"%{str(student_name).strip()}%"
+        cursor.execute("SELECT * FROM tn_sslc_marksheets WHERE student_name LIKE ? AND dob = ?", (clean_name, str(dob).strip()))
+        row = cursor.fetchone()
+        if row:
+            conn.close()
+            return dict(row)
+
+    conn.close()
+    return None
 
 def get_certificate_by_id(cert_id):
     conn = get_db_connection()

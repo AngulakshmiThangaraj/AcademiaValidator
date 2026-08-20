@@ -17,7 +17,6 @@ function switchTab(tabId) {
     }
   });
 
-  // Update navbar active state
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.classList.remove('active');
     if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
@@ -38,7 +37,9 @@ async function runPreset(type) {
     const formData = new FormData();
     formData.append('preset_type', type);
 
-    const response = await fetch(`${API_BASE}/api/verify`, {
+    const targetEndpoint = type.startsWith('tn_sslc') ? `${API_BASE}/api/verify/marksheet` : `${API_BASE}/api/verify`;
+
+    const response = await fetch(targetEndpoint, {
       method: 'POST',
       body: formData
     });
@@ -73,7 +74,7 @@ async function uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE}/api/verify`, {
+    const response = await fetch(`${API_BASE}/api/verify/marksheet`, {
       method: 'POST',
       body: formData
     });
@@ -129,43 +130,52 @@ function renderResults(data) {
   const verdictTag = document.getElementById('verdict-tag');
   const hashStatus = document.getElementById('hash-match-status');
 
-  const score = data.authenticity_score;
-  scoreVal.textContent = `${score}%`;
+  const scorePct = data.percentage !== undefined ? data.percentage : data.authenticity_score;
+  scoreVal.textContent = `${scorePct}%`;
 
-  if (data.status === 'VERIFIED') {
-    verdictTag.textContent = 'STATUS: VERIFIED';
+  const statusStr = data.status || 'VERIFIED';
+  verdictTag.textContent = `STATUS: ${statusStr.replace('_', ' ')}`;
+
+  if (statusStr === 'VERIFIED') {
     verdictTag.className = 'verdict-tag verified';
-    scoreCircle.style.background = `conic-gradient(#10b981 ${score * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+    scoreCircle.style.background = `conic-gradient(#10b981 ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+  } else if (statusStr === 'PARTIALLY_VERIFIED' || statusStr === 'REVIEW_REQUIRED') {
+    verdictTag.className = 'verdict-tag warning';
+    verdictTag.style.background = 'rgba(245, 158, 11, 0.2)';
+    verdictTag.style.color = '#fde68a';
+    scoreCircle.style.background = `conic-gradient(#f59e0b ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
   } else {
-    verdictTag.textContent = 'STATUS: SUSPICIOUS';
     verdictTag.className = 'verdict-tag suspicious';
-    scoreCircle.style.background = `conic-gradient(#ef4444 ${score * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+    scoreCircle.style.background = `conic-gradient(#ef4444 ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
   }
 
-  if (data.hash_matched_in_registry) {
-    hashStatus.textContent = "✓ SHA-256 Hash Matched Registry Copy";
+  if (data.qr_verified || data.hash_matched_in_registry) {
+    hashStatus.textContent = "✓ SHA-256 & Registry Hash Verified";
     hashStatus.style.color = "var(--success-green)";
   } else {
-    hashStatus.textContent = "✗ Document Hash Modified / Unregistered";
+    hashStatus.textContent = "✗ Registry Hash Mismatch / Unverified";
     hashStatus.style.color = "var(--danger-red)";
   }
 
   // 2. Score Factor Breakdown Bars
-  const bd = data.score_breakdown;
-  document.getElementById('score-ai').textContent = `${bd.ai_prediction_score} / 35.0`;
-  document.getElementById('bar-ai').style.width = `${(bd.ai_prediction_score / 35.0) * 100}%`;
+  const scores = data.scores || {};
+  const bd = data.score_breakdown || {};
 
-  document.getElementById('score-ocr').textContent = `${bd.ocr_consistency_score} / 20.0`;
-  document.getElementById('bar-ocr').style.width = `${(bd.ocr_consistency_score / 20.0) * 100}%`;
+  const ocrPts = scores.ocr_consistency !== undefined ? scores.ocr_consistency : bd.ocr_consistency_score;
+  document.getElementById('score-ocr').textContent = `${ocrPts} / 20.0`;
+  document.getElementById('bar-ocr').style.width = `${(ocrPts / 20.0) * 100}%`;
 
-  document.getElementById('score-qr').textContent = `${bd.qr_validity_score} / 15.0`;
-  document.getElementById('bar-qr').style.width = `${(bd.qr_validity_score / 15.0) * 100}%`;
+  const regPts = scores.registry_match !== undefined ? scores.registry_match : bd.id_hash_score;
+  document.getElementById('score-id').textContent = `${regPts} / 15.0`;
+  document.getElementById('bar-id').style.width = `${(regPts / 15.0) * 100}%`;
 
-  document.getElementById('score-id').textContent = `${bd.id_hash_score} / 15.0`;
-  document.getElementById('bar-id').style.width = `${(bd.id_hash_score / 15.0) * 100}%`;
+  const qrPts = scores.qr_verification !== undefined ? scores.qr_verification : bd.qr_validity_score;
+  document.getElementById('score-qr').textContent = `${qrPts} / 15.0`;
+  document.getElementById('bar-qr').style.width = `${(qrPts / 15.0) * 100}%`;
 
-  document.getElementById('score-ela').textContent = `${bd.ela_forensics_score} / 15.0`;
-  document.getElementById('bar-ela').style.width = `${(bd.ela_forensics_score / 15.0) * 100}%`;
+  const elaPts = bd.ela_forensics_score !== undefined ? bd.ela_forensics_score : '--';
+  document.getElementById('score-ela').textContent = `${elaPts}`;
+  document.getElementById('bar-ela').style.width = `${typeof elaPts === 'number' ? (elaPts / 15.0) * 100 : 80}%`;
 
   // 3. Image Viewer
   switchViewerTab('orig');
@@ -174,47 +184,83 @@ function renderResults(data) {
   const tableBody = document.getElementById('metadata-table-body');
   tableBody.innerHTML = '';
 
-  const fields = [
+  const fieldsList = [
+    { key: 'certificate_id', label: 'Certificate ID' },
+    { key: 'register_no', label: 'Register Number' },
     { key: 'student_name', label: 'Student Name' },
-    { key: 'reg_no', label: 'Register Number' },
-    { key: 'institution', label: 'Institution' },
-    { key: 'course', label: 'Course' },
-    { key: 'cgpa', label: 'CGPA / Marks' },
-    { key: 'cert_id', label: 'Certificate ID' }
+    { key: 'dob', label: 'Date of Birth (DOB)' },
+    { key: 'total_marks', label: 'Total Marks' },
+    { key: 'father_name', label: "Father's Name" },
+    { key: 'passing_year', label: 'Passing Year' }
   ];
 
-  const dbRec = data.database_registry_record || {};
-  const ocrRec = data.extracted_ocr_fields || {};
+  const dbRec = data.registry_record || data.database_registry_record || {};
+  const extractedObj = data.ocr_debug_info?.extracted_fields || data.extracted_ocr_fields || {};
 
-  fields.forEach(f => {
+  fieldsList.forEach(f => {
     const tr = document.createElement('tr');
-    const extVal = ocrRec[f.key] || 'Not Extracted';
-    const dbVal = dbRec[f.key] || 'Not Registered';
+    
+    let extValObj = extractedObj[f.key];
+    let extVal = 'Not Extracted';
+    let confStr = '';
+    if (extValObj && typeof extValObj === 'object') {
+      extVal = extValObj.value !== null && extValObj.value !== undefined ? extValObj.value : 'Not Extracted';
+      if (extValObj.confidence) {
+        confStr = ` (${Math.round(extValObj.confidence * 100)}%)`;
+      }
+    } else if (extValObj) {
+      extVal = extValObj;
+    }
 
-    let isMatch = false;
-    if (extVal !== 'Not Extracted' && dbVal !== 'Not Registered') {
-      if (String(extVal).toLowerCase().includes(String(dbVal).toLowerCase()) || String(dbVal).toLowerCase().includes(String(extVal).toLowerCase())) {
-        isMatch = true;
+    let dbVal = dbRec[f.key] || dbRec['cert_id'] || 'Not Registered';
+    if (f.key === 'certificate_id') dbVal = dbRec['certificate_id'] || dbRec['cert_id'] || 'Not Registered';
+    if (f.key === 'total_marks') dbVal = dbRec['total_marks'] || dbRec['cgpa'] || 'Not Registered';
+
+    let isMatched = false;
+    if (data.matched_fields && data.matched_fields.includes(f.key)) {
+      isMatched = true;
+    } else if (extVal !== 'Not Extracted' && dbVal !== 'Not Registered') {
+      if (String(extVal).toLowerCase().replace(/\s/g, '').includes(String(dbVal).toLowerCase().replace(/\s/g, ''))) {
+        isMatched = true;
       }
     }
 
     tr.innerHTML = `
       <td style="font-weight: 600;">${f.label}</td>
-      <td>${extVal}</td>
+      <td>${extVal}${confStr}</td>
       <td>${dbVal}</td>
       <td>
-        <span class="match-tag ${isMatch ? 'match' : 'mismatch'}">
-          ${isMatch ? 'MATCH' : 'DISCREPANCY'}
+        <span class="match-tag ${isMatched ? 'match' : 'mismatch'}">
+          ${isMatched ? 'MATCH ✓' : 'DISCREPANCY ✗'}
         </span>
       </td>
     `;
     tableBody.appendChild(tr);
   });
 
-  // 5. Explainable Report Bullets
+  // 5. Explainable Report Bullets & Discrepancies
+  const explanationEl = document.getElementById('explanation-text');
+  if (explanationEl) {
+    explanationEl.textContent = data.explanation || 'Verification scan completed successfully.';
+  }
+
   const bulletList = document.getElementById('report-bullets-list');
   bulletList.innerHTML = '';
-  (data.explainable_report || []).forEach(bullet => {
+
+  const reportItems = [];
+  if (data.matched_fields && data.matched_fields.length > 0) {
+    reportItems.push(`✓ Verified Matched Fields: ${data.matched_fields.join(', ')}`);
+  }
+  if (data.discrepancies && data.discrepancies.length > 0) {
+    data.discrepancies.forEach(d => {
+      reportItems.push(`✗ Discrepancy in ${d.field}: OCR '${d.ocr_value}' vs Registry '${d.registry_value}' (${d.reason})`);
+    });
+  }
+  if (data.explainable_report) {
+    data.explainable_report.forEach(b => reportItems.push(b));
+  }
+
+  reportItems.forEach(bullet => {
     const li = document.createElement('li');
     li.textContent = bullet;
     if (bullet.startsWith('✓')) {
@@ -229,6 +275,15 @@ function renderResults(data) {
     }
     bulletList.appendChild(li);
   });
+
+  // 6. OCR Debug Information Fill
+  if (data.ocr_debug_info) {
+    const dbg = data.ocr_debug_info;
+    document.getElementById('debug-engine').textContent = dbg.ocr_engine_info?.engine_used || 'Dictionary Fallback Parser';
+    document.getElementById('debug-rec-id').textContent = dbg.matching_record_id || 'None';
+    document.getElementById('debug-qr-payload').textContent = JSON.stringify(dbg.qr_debug?.payload || dbg.qr_debug || {}, null, 2);
+    document.getElementById('debug-raw-ocr').textContent = dbg.raw_text || 'Raw text processed.';
+  }
 }
 
 // Viewer Tab Switcher
@@ -279,38 +334,6 @@ async function fetchModelMetrics() {
     }
   } catch (err) {
     console.error("Error fetching metrics:", err);
-  }
-}
-
-// Certificate Registration Form Handler
-async function handleRegisterSubmit(event) {
-  event.preventDefault();
-
-  const formData = new FormData();
-  formData.append('cert_id', document.getElementById('reg-cert-id').value);
-  formData.append('reg_no', document.getElementById('reg-student-no').value);
-  formData.append('student_name', document.getElementById('reg-student-name').value);
-  formData.append('institution', document.getElementById('reg-institution').value);
-  formData.append('course', document.getElementById('reg-course').value);
-  formData.append('cgpa', document.getElementById('reg-cgpa').value);
-  formData.append('issue_date', document.getElementById('reg-date').value);
-
-  try {
-    const response = await fetch(`${API_BASE}/api/register`, {
-      method: 'POST',
-      body: formData
-    });
-
-    if (response.ok) {
-      const res = await response.json();
-      document.getElementById('register-result-box').classList.remove('hidden');
-      document.getElementById('reg-sha-hash').textContent = `SHA-256 Document Fingerprint: ${res.sha256_fingerprint}`;
-      document.getElementById('reg-qr-img').src = res.qr_code_b64;
-    } else {
-      alert("Registration failed: " + await response.text());
-    }
-  } catch (err) {
-    alert("Error: " + err.message);
   }
 }
 

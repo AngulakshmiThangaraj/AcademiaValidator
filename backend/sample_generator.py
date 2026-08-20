@@ -8,14 +8,12 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 
-# Add backend directory to sys.path
 backend_dir = os.path.dirname(__file__)
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 from database import register_certificate, init_db
 
-# Determine writable samples directory (local or /tmp for Vercel)
 if os.access(backend_dir, os.W_OK):
     SAMPLES_DIR = os.path.join(backend_dir, "samples")
 else:
@@ -50,9 +48,6 @@ def create_demo_certificates():
 
     width, height = 850, 1100
 
-    # -------------------------------------------------------------
-    # CERTIFICATE A: Genuine Certificate
-    # -------------------------------------------------------------
     img_a = Image.new("RGB", (width, height), (254, 253, 250))
     draw_a = ImageDraw.Draw(img_a)
 
@@ -149,21 +144,13 @@ def create_demo_certificates():
     except Exception:
         pass
 
-    # -------------------------------------------------------------
-    # CERTIFICATE B: Manipulated Certificate
-    # -------------------------------------------------------------
     img_b = img_a.copy()
     draw_b = ImageDraw.Draw(img_b)
 
-    # 1. Tamper CGPA
     draw_b.rectangle([535, y + 15, 780, y + 50], fill=(255, 255, 255))
     draw_b.text((538, y + 20), "CGPA: 9.95 / 10.0 (GOLD)", fill=(180, 20, 20), font=font_bold)
-
-    # 2. Tamper Name
     draw_b.rectangle([215, 160, 450, 188], fill=(245, 248, 252))
     draw_b.text((217, 165), "Rohan Verma (RANK 1)", fill=(0, 0, 0), font=font_bold)
-
-    # 3. Tamper Marks
     draw_b.rectangle([660, 338, 735, 368], fill=(255, 255, 255))
     draw_b.text((662, 342), "99 / 100", fill=(0, 0, 160), font=font_bold)
 
@@ -180,12 +167,121 @@ def create_demo_certificates():
 
     return img_a, img_b
 
+def create_tn_sslc_sample(preset_type="tn_sslc_genuine"):
+    """
+    Generates realistic Tamil Nadu State Board SSLC (Class X) Marksheet image.
+    Genuine: ANGULAKSHMI T (Cert ID: 24353750, Reg: 5191247, Total: 451)
+    Manipulated: Altered Total Marks to 499 with font mismatch & no valid QR.
+    """
+    width, height = 850, 1100
+    img = Image.new("RGB", (width, height), (255, 253, 248))
+    draw = ImageDraw.Draw(img)
+
+    draw.rectangle([15, 15, width - 15, height - 15], outline=(140, 30, 30), width=4)
+    draw.rectangle([22, 22, width - 22, height - 22], outline=(200, 160, 60), width=2)
+
+    font_title = load_font(20)
+    font_sub = load_font(14)
+    font_body = load_font(13)
+    font_bold = load_font(14)
+
+    draw.text((width // 2, 50), "GOVERNMENT OF TAMIL NADU", fill=(140, 30, 30), font=font_title, anchor="mm")
+    draw.text((width // 2, 78), "DIRECTORATE OF GOVERNMENT EXAMINATIONS, CHENNAI - 600 006", fill=(30, 30, 30), font=font_sub, anchor="mm")
+    draw.text((width // 2, 104), "SSLC MARKSHEET / இடைநிலைப் பள்ளி விடுப்புச் சான்றிதழ்", fill=(10, 60, 130), font=font_bold, anchor="mm")
+    draw.line([(50, 125), (width - 50, 125)], fill=(200, 160, 60), width=2)
+
+    cert_id_str = "24353750" if preset_type == "tn_sslc_genuine" else "24359999"
+    draw.text((620, 138), f"CERTIFICATE NO : {cert_id_str}", fill=(180, 20, 20), font=font_bold)
+    draw.text((620, 158), "SESSION : APR 2023", fill=(40, 40, 40), font=font_body)
+
+    draw.rectangle([50, 185, width - 50, 310], fill=(248, 250, 255), outline=(180, 200, 230), width=1)
+    
+    name_str = "ANGULAKSHMI T" if preset_type == "tn_sslc_genuine" else "ANGULAKSHMI S"
+    reg_str = "5191247" if preset_type == "tn_sslc_genuine" else "5191999"
+
+    draw.text((70, 200), f"NAME OF CANDIDATE  : {name_str}", fill=(20, 20, 20), font=font_bold)
+    draw.text((70, 226), f"REGISTER NUMBER    : {reg_str}", fill=(20, 20, 20), font=font_bold)
+    draw.text((70, 252), "DATE OF BIRTH      : 14/06/2007", fill=(20, 20, 20), font=font_body)
+    draw.text((70, 278), "FATHER'S NAME      : THANGARAJ M", fill=(20, 20, 20), font=font_body)
+
+    draw.text((500, 200), "COURSE : SSLC (CLASS X)", fill=(20, 20, 20), font=font_body)
+    draw.text((500, 226), "MOTHER : LAKSHMI T", fill=(20, 20, 20), font=font_body)
+    draw.text((500, 252), "SCHOOL : GOVT HIGHER SECONDARY SCHOOL", fill=(20, 20, 20), font=font_body)
+
+    draw.rectangle([50, 335, width - 50, 370], fill=(140, 30, 30))
+    draw.text((70, 345), "SUBJECT CODE & TITLE", fill=(255, 255, 255), font=font_bold)
+    draw.text((450, 345), "MAX MARKS", fill=(255, 255, 255), font=font_bold)
+    draw.text((620, 345), "MARKS OBTAINED", fill=(255, 255, 255), font=font_bold)
+
+    subjects = [
+        ("01 TAMIL", 100, 88),
+        ("02 ENGLISH", 100, 85),
+        ("03 MATHEMATICS", 100, 92),
+        ("04 SCIENCE", 100, 94),
+        ("05 SOCIAL SCIENCE", 100, 92)
+    ]
+
+    y = 370
+    for code_title, max_m, obt in subjects:
+        bg = (255, 255, 255) if (y // 40) % 2 == 0 else (250, 252, 255)
+        draw.rectangle([50, y, width - 50, y + 40], fill=bg, outline=(220, 220, 220))
+        draw.text((70, y + 10), code_title, fill=(30, 30, 30), font=font_body)
+        draw.text((470, y + 10), str(max_m), fill=(30, 30, 30), font=font_body)
+        draw.text((640, y + 10), f"{obt:03d}  P", fill=(20, 20, 20), font=font_bold)
+        y += 40
+
+    total_val = 451 if preset_type == "tn_sslc_genuine" else 499
+    draw.rectangle([50, y + 15, width - 50, y + 65], fill=(240, 245, 255), outline=(160, 180, 220), width=2)
+    draw.text((70, y + 28), "GRAND TOTAL : FIVE SUBJECTS", fill=(30, 30, 30), font=font_bold)
+
+    total_color = (20, 35, 75) if preset_type == "tn_sslc_genuine" else (180, 20, 20)
+    draw.text((550, y + 28), f"TOTAL MARKS: {total_val} / 500   RESULT: PASS", fill=total_color, font=font_bold)
+
+    if preset_type == "tn_sslc_genuine":
+        qr_payload = json.dumps({
+            "cert_id": "24353750",
+            "reg_no": "5191247",
+            "name": "ANGULAKSHMI T",
+            "dob": "14/06/2007",
+            "total_marks": 451
+        })
+        qr = qrcode.QRCode(box_size=3, border=1)
+        qr.add_data(qr_payload)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white").resize((120, 120))
+        img.paste(qr_img, (70, 900))
+        draw.text((70, 1030), "Scan to Verify TN Registry", fill=(80, 80, 80), font=load_font(11))
+    else:
+        # Tampered preset: draw corrupted / modified QR payload
+        qr_payload_bad = json.dumps({
+            "cert_id": "24359999",
+            "reg_no": "5191999",
+            "name": "ANGULAKSHMI S",
+            "dob": "14/06/2007",
+            "total_marks": 499
+        })
+        qr_bad = qrcode.QRCode(box_size=3, border=1)
+        qr_bad.add_data(qr_payload_bad)
+        qr_bad.make(fit=True)
+        qr_img_bad = qr_bad.make_image(fill_color="black", back_color="white").resize((120, 120))
+        img.paste(qr_img_bad, (70, 900))
+
+    draw_seal(draw, center=(425, 950), radius=45)
+    draw.line([(600, 980), (780, 980)], fill=(40, 40, 40), width=2)
+    draw.text((615, 986), "DIRECTOR OF GOVT EXAMINATIONS", fill=(60, 60, 60), font=load_font(11))
+
+    return img
+
 def get_demo_certificate_bytes(preset_type):
-    """Returns sample image bytes in memory without disk dependency."""
-    img_a, img_b = create_demo_certificates()
-    target_img = img_a if preset_type == "genuine" else img_b
+    """Returns sample image bytes in memory for presets."""
+    if preset_type in ["tn_sslc_genuine", "tn_sslc_manipulated"]:
+        img = create_tn_sslc_sample(preset_type)
+    else:
+        img_a, img_b = create_demo_certificates()
+        img = img_a if preset_type == "genuine" else img_b
+
     buf = io.BytesIO()
-    target_img.save(buf, format="JPEG", quality=95)
+    img.save(buf, format="JPEG", quality=95)
     return buf.getvalue()
 
 if __name__ == "__main__":

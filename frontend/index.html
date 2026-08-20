@@ -17,11 +17,11 @@
       </div>
       <div>
         <div class="brand-title">Authenticity Validator for Academia</div>
-        <div class="brand-subtitle">Forensic Credentials Verification Layer</div>
+        <div class="brand-subtitle">Academic Credentials & TN SSLC Marksheet Forensic Layer</div>
       </div>
     </div>
     <div class="sih-badge">
-      <i class="fa-solid fa-microchip"></i> AI + OCR + ELA Forensics
+      <i class="fa-solid fa-microchip"></i> Tamil + Eng OCR + AI + ELA Forensics
     </div>
     <nav class="nav-links">
       <button class="nav-btn active" onclick="switchTab('dashboard')"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
@@ -37,15 +37,21 @@
       <!-- Hero Banner -->
       <section class="hero-banner">
         <div class="hero-text">
-          <h1>AI-Powered Document Tampering & Forgery Validator</h1>
-          <p>Complements DigiLocker / NAD by performing forensic multi-factor analysis (MobileNetV2 AI + OCR + ELA Heatmap + Cryptographic QR & Database Registry) on physical, scanned, or photographed academic certificates.</p>
+          <h1>AI-Powered Academic & TN SSLC Marksheet Validator</h1>
+          <p>Complements DigiLocker / NAD by performing forensic multi-factor analysis (MobileNetV2 AI + Tamil/English OCR + ELA Heatmap + Cryptographic QR & Database Registry) on physical, scanned, or photographed academic marksheets.</p>
         </div>
-        <div class="hero-actions">
-          <button class="btn-preset btn-genuine" onclick="runPreset('genuine')">
-            <i class="fa-solid fa-circle-check"></i> Test Certificate A (Genuine)
+        <div class="hero-actions" style="flex-wrap: wrap; gap: 0.5rem;">
+          <button class="btn-preset btn-genuine" onclick="runPreset('tn_sslc_genuine')">
+            <i class="fa-solid fa-graduation-cap"></i> Test TN SSLC (Genuine - ANGULAKSHMI T)
           </button>
-          <button class="btn-preset btn-manipulated" onclick="runPreset('manipulated')">
-            <i class="fa-solid fa-triangle-exclamation"></i> Test Certificate B (Manipulated)
+          <button class="btn-preset btn-manipulated" onclick="runPreset('tn_sslc_manipulated')">
+            <i class="fa-solid fa-triangle-exclamation"></i> Test TN SSLC (Manipulated Marks)
+          </button>
+          <button class="btn-preset btn-genuine" style="background: rgba(56, 189, 248, 0.2); color: var(--primary-cyan);" onclick="runPreset('genuine')">
+            <i class="fa-solid fa-certificate"></i> Test Higher Ed Cert A
+          </button>
+          <button class="btn-preset btn-manipulated" style="background: rgba(245, 158, 11, 0.2); color: var(--warning-amber);" onclick="runPreset('manipulated')">
+            <i class="fa-solid fa-file-excel"></i> Test Higher Ed Cert B
           </button>
         </div>
       </section>
@@ -59,22 +65,22 @@
           <!-- Dropzone Card -->
           <div class="glass-card">
             <div class="card-title">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Upload Academic Certificate
+              <i class="fa-solid fa-cloud-arrow-up"></i> Upload Academic Certificate / TN Marksheet
             </div>
             <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
               <div class="scanning-line" id="scanner-line"></div>
               <div class="dropzone-icon">
                 <i class="fa-solid fa-file-invoice"></i>
               </div>
-              <div class="dropzone-text">Drag & drop certificate image here or click to browse</div>
-              <div class="dropzone-sub">Supports JPG, PNG, WEBP (Max 16 MB)</div>
+              <div class="dropzone-text">Drag & drop certificate/marksheet image here or click to browse</div>
+              <div class="dropzone-sub">Supports TN SSLC/HSC, Higher Ed PDF, JPG, PNG, WEBP (Max 16 MB)</div>
               <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
             </div>
 
             <!-- Pipeline Progress Steps -->
             <div class="pipeline-status">
               <div class="pipeline-step" id="step-1">1. Preprocessing</div>
-              <div class="pipeline-step" id="step-2">2. OCR Parsing</div>
+              <div class="pipeline-step" id="step-2">2. TN OCR Engine</div>
               <div class="pipeline-step" id="step-3">3. AI Classifier</div>
               <div class="pipeline-step" id="step-4">4. ELA Forensics</div>
               <div class="pipeline-step" id="step-5">5. QR & Registry</div>
@@ -105,37 +111,17 @@
             <div class="breakdown-list">
               <div class="breakdown-item">
                 <div class="breakdown-meta">
-                  <span>MobileNetV2 AI Forgery Classifier (35%)</span>
-                  <span id="score-ai">-- / 35.0</span>
-                </div>
-                <div class="progress-bar-bg">
-                  <div class="progress-bar-fill" id="bar-ai" style="width: 0%; background: var(--primary-cyan);"></div>
-                </div>
-              </div>
-
-              <div class="breakdown-item">
-                <div class="breakdown-meta">
-                  <span>OCR & Database Text Consistency (20%)</span>
+                  <span>OCR Consistency Score (20 pts)</span>
                   <span id="score-ocr">-- / 20.0</span>
                 </div>
                 <div class="progress-bar-bg">
-                  <div class="progress-bar-fill" id="bar-ocr" style="width: 0%; background: var(--primary-indigo);"></div>
+                  <div class="progress-bar-fill" id="bar-ocr" style="width: 0%; background: var(--primary-cyan);"></div>
                 </div>
               </div>
 
               <div class="breakdown-item">
                 <div class="breakdown-meta">
-                  <span>QR Code Signature & Payload (15%)</span>
-                  <span id="score-qr">-- / 15.0</span>
-                </div>
-                <div class="progress-bar-bg">
-                  <div class="progress-bar-fill" id="bar-qr" style="width: 0%; background: var(--accent-purple);"></div>
-                </div>
-              </div>
-
-              <div class="breakdown-item">
-                <div class="breakdown-meta">
-                  <span>Certificate ID & Registry Record (15%)</span>
+                  <span>Registry Record Match Score (15 pts)</span>
                   <span id="score-id">-- / 15.0</span>
                 </div>
                 <div class="progress-bar-bg">
@@ -145,8 +131,18 @@
 
               <div class="breakdown-item">
                 <div class="breakdown-meta">
-                  <span>ELA Compression & Alignment Forensics (15%)</span>
-                  <span id="score-ela">-- / 15.0</span>
+                  <span>QR Signature Verification (15 pts)</span>
+                  <span id="score-qr">-- / 15.0</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bar-qr" style="width: 0%; background: var(--accent-purple);"></div>
+                </div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-meta">
+                  <span>ELA Forensics & Noise Alignment</span>
+                  <span id="score-ela">-- / --</span>
                 </div>
                 <div class="progress-bar-bg">
                   <div class="progress-bar-fill" id="bar-ela" style="width: 0%; background: var(--warning-amber);"></div>
@@ -203,11 +199,25 @@
             <div class="card-title">
               <i class="fa-solid fa-file-contract"></i> Explainable Forensic Verification Summary
             </div>
+            <div id="explanation-text" style="color: var(--primary-cyan); font-weight: 600; margin-bottom: 0.75rem; font-size: 0.95rem;"></div>
             <ul class="report-bullets" id="report-bullets-list">
               <li style="color: var(--text-dim);">Detailed explainable verification findings will appear here after document scan...</li>
             </ul>
 
-            <button class="btn-print" onclick="window.print()">
+            <!-- Expandable OCR Debug Section -->
+            <details style="margin-top: 1rem; background: rgba(15, 23, 42, 0.6); padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+              <summary style="cursor: pointer; font-weight: 600; color: var(--primary-cyan);">
+                <i class="fa-solid fa-bug"></i> OCR Debug Information & Raw Extraction Data
+              </summary>
+              <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+                <div style="margin-bottom: 0.5rem;"><strong>OCR Engine Info:</strong> <span id="debug-engine">--</span></div>
+                <div style="margin-bottom: 0.5rem;"><strong>Matching Registry Record ID:</strong> <span id="debug-rec-id">--</span></div>
+                <div style="margin-bottom: 0.5rem;"><strong>Detected QR Payload:</strong> <pre id="debug-qr-payload" style="background: rgba(0,0,0,0.4); padding: 0.5rem; border-radius: 4px; overflow-x: auto;">--</pre></div>
+                <div><strong>Raw Extracted OCR Text:</strong> <pre id="debug-raw-ocr" style="background: rgba(0,0,0,0.4); padding: 0.5rem; border-radius: 4px; max-height: 150px; overflow-y: auto;">--</pre></div>
+              </div>
+            </details>
+
+            <button class="btn-print" style="margin-top: 1rem;" onclick="window.print()">
               <i class="fa-solid fa-print"></i> Export / Print Forensic Report
             </button>
           </div>

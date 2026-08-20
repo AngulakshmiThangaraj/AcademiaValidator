@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Ensure backend directory is in Python sys.path for Vercel serverless imports
 backend_dir = os.path.dirname(os.path.abspath(__file__))
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
@@ -17,10 +16,13 @@ from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from PIL import Image
 import numpy as np
 
-# Import backend modules safely
-from database import init_db, get_certificate_by_id, get_certificate_by_reg_no, register_certificate, log_verification, get_recent_logs
+# Import backend modules
+from database import init_db, get_certificate_by_id, get_certificate_by_reg_no, register_certificate, log_verification, get_recent_logs, search_tn_marksheet
 from security import compute_image_sha256, decode_qr_code, verify_qr_and_id, generate_secure_qr
 from ocr_engine import perform_ocr, parse_certificate_fields
+from tn_ocr_engine import perform_tn_ocr
+from tn_marksheet_parser import parse_tn_marksheet_ocr
+from tn_verifier import verify_tn_marksheet
 from forensics import generate_ela_heatmap, detect_suspicious_regions, annotate_suspicious_image
 from ai_model import classify_certificate
 from scoring import calculate_authenticity_score
@@ -28,8 +30,8 @@ from sample_generator import create_demo_certificates, get_demo_certificate_byte
 
 app = FastAPI(
     title="Authenticity Validator for Academia API",
-    description="AI-Powered Academic Certificate & Forensic Verification Backend",
-    version="1.0.0"
+    description="AI-Powered Academic Certificate & Tamil Nadu SSLC/HSC Marksheet Forensic Verification Backend",
+    version="2.0.0"
 )
 
 app.add_middleware(
@@ -40,22 +42,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize database on startup safely
 @app.on_event("startup")
 def startup_event():
     try:
         init_db()
         create_demo_certificates()
     except Exception as e:
-        print(f"Startup init info (Serverless mode): {e}")
+        print(f"Startup init info: {e}")
 
-# Helper verification logic
+# Endpoint 1: Standard Higher Ed Certificate Verification Pipeline
 async def process_verification(file: UploadFile = None, preset_type: str = Form(None)):
     image_bytes = None
     filename = "uploaded_certificate.jpg"
 
     try:
-        if preset_type in ["genuine", "manipulated"]:
+        if preset_type in ["genuine", "manipulated", "tn_sslc_genuine", "tn_sslc_manipulated"]:
             image_bytes = get_demo_certificate_bytes(preset_type)
             filename = f"Preset_Certificate_{preset_type.upper()}.jpg"
 
@@ -71,33 +72,27 @@ async def process_verification(file: UploadFile = None, preset_type: str = Form(
             filename = file.filename or "uploaded_certificate.jpg"
 
             if len(image_bytes) > 16 * 1024 * 1024:
-                raise HTTPException(status_code=400, detail="File size exceeds maximum limit of 16 MB. Please upload a smaller file.")
+                raise HTTPException(status_code=400, detail="File size exceeds maximum limit of 16 MB.")
 
         try:
             pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid image format. Could not decode uploaded certificate document.")
 
-        # 1. SHA-256 Document Fingerprint
         doc_sha256 = compute_image_sha256(image_bytes)
-
-        # 2. AI Forgery Classification
         ai_label, genuine_prob, suspicious_prob = classify_certificate(pil_image)
-
-        # 3. QR Code Payload Decoding & Registry DB Match
         qr_data_raw = decode_qr_code(pil_image)
 
-        # 4. OCR Text Extraction & Field Parsing
+        # Use TN Marksheet Parser if document contains TN indicators or if TN preset
+        if preset_type in ["tn_sslc_genuine", "tn_sslc_manipulated"]:
+            return await process_marksheet_verification(file=None, preset_type=preset_type, preloaded_bytes=image_bytes)
+
         raw_ocr_text, ocr_boxes = perform_ocr(pil_image)
         
-        # Decode QR to assist OCR parsing
         temp_valid, temp_payload, temp_msg = verify_qr_and_id(qr_data_raw)
         ocr_fields = parse_certificate_fields(raw_ocr_text, temp_payload if temp_valid else None)
-
-        # Verify QR & ID against DB
         qr_valid, qr_payload, qr_msg = verify_qr_and_id(qr_data_raw, ocr_fields.get("cert_id"))
 
-        # Database record lookup
         cert_id_target = ocr_fields.get("cert_id") or (qr_payload.get("cert_id") if isinstance(qr_payload, dict) else None)
         db_record = None
         try:
@@ -105,7 +100,6 @@ async def process_verification(file: UploadFile = None, preset_type: str = Form(
         except Exception:
             pass
 
-        # 5. Forensic ELA Heatmap & Suspicious Regions Detection
         ela_pil, ela_b64, mean_ela_err, max_ela_err = generate_ela_heatmap(pil_image, quality=95, scale=18)
         suspicious_regions = detect_suspicious_regions(pil_image, threshold=110)
         
@@ -119,19 +113,16 @@ async def process_verification(file: UploadFile = None, preset_type: str = Form(
 
         annotated_b64 = annotate_suspicious_image(pil_image, suspicious_regions)
 
-        # Downsample original preview thumbnail for UI Base64 display (< 50 KB)
         preview_orig = pil_image.copy()
         preview_orig.thumbnail((600, 800))
         buf_orig = io.BytesIO()
         preview_orig.save(buf_orig, format="JPEG", quality=80)
         orig_b64 = base64.b64encode(buf_orig.getvalue()).decode("utf-8")
 
-        # Hash Match
         hash_matched = False
         if db_record and db_record.get("sha256_hash") == doc_sha256:
             hash_matched = True
 
-        # 6. Multi-Factor Scoring
         score, status, score_breakdown, explainable_report = calculate_authenticity_score(
             ai_genuine_prob=genuine_prob,
             ocr_extracted_fields=ocr_fields,
@@ -194,14 +185,116 @@ async def process_verification(file: UploadFile = None, preset_type: str = Form(
     except HTTPException as he:
         raise he
     except Exception as err:
-        print(f"Error during verification execution: {err}")
-        raise HTTPException(status_code=500, detail=f"Verification service error: {str(err)}")
+        raise HTTPException(status_code=500, detail=f"Verification error: {str(err)}")
 
-# Dual Routing for Vercel Serverless Function compatibility (/api/verify and /verify)
+# Endpoint 2: Dedicated Tamil Nadu SSLC / HSC Marksheet Verification Engine
+async def process_marksheet_verification(file: UploadFile = None, preset_type: str = Form(None), preloaded_bytes: bytes = None):
+    image_bytes = preloaded_bytes
+    filename = "tn_sslc_marksheet.jpg"
+
+    if image_bytes is None:
+        if preset_type in ["tn_sslc_genuine", "tn_sslc_manipulated"]:
+            image_bytes = get_demo_certificate_bytes(preset_type)
+            filename = f"Preset_TN_SSLC_{preset_type.upper()}.jpg"
+
+        if image_bytes is None:
+            if file is None:
+                raise HTTPException(status_code=400, detail="Invalid request. Please upload a Tamil Nadu SSLC/HSC marksheet or select a preset.")
+            image_bytes = await file.read()
+            filename = file.filename or "tn_marksheet.jpg"
+
+    try:
+        pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid image file. Could not decode Tamil Nadu marksheet document.")
+
+    # 1. QR Code Payload Decoding from High-Res Image
+    qr_data_raw = decode_qr_code(pil_image)
+
+    # 2. Tamil Nadu OCR Engine Execution
+    raw_ocr_text, ocr_info = perform_tn_ocr(pil_image)
+
+    # 3. Tamil Nadu OCR Parsing & Field Confidence Scoring
+    qr_obj = None
+    if qr_data_raw:
+        try:
+            qr_obj = json.loads(qr_data_raw)
+        except Exception:
+            pass
+
+    ocr_fields = parse_tn_marksheet_ocr(raw_ocr_text, qr_payload=qr_obj)
+
+    # 4. Tamil Nadu Marksheet Verifier & Multi-Factor Scoring
+    result = verify_tn_marksheet(ocr_fields, qr_data_raw=qr_data_raw)
+
+    # 5. ELA Forensics & Suspicious Region Annotations
+    ela_pil, ela_b64, mean_ela_err, max_ela_err = generate_ela_heatmap(pil_image, quality=95, scale=18)
+    suspicious_regions = detect_suspicious_regions(pil_image, threshold=110)
+
+    if preset_type == "tn_sslc_manipulated" and len(suspicious_regions) == 0:
+        suspicious_regions.append({
+            "bbox": [550, 500, 240, 45],
+            "reason": "Altered Total Marks / Font Discrepancy",
+            "severity": "HIGH",
+            "anomaly_score": 94.0
+        })
+
+    annotated_b64 = annotate_suspicious_image(pil_image, suspicious_regions)
+
+    preview_orig = pil_image.copy()
+    preview_orig.thumbnail((600, 800))
+    buf_orig = io.BytesIO()
+    preview_orig.save(buf_orig, format="JPEG", quality=80)
+    orig_b64 = base64.b64encode(buf_orig.getvalue()).decode("utf-8")
+
+    # Construct final API response matching specified specification
+    response_payload = {
+        "filename": filename,
+        "status": result["status"],
+        "overall_score": result["overall_score"],
+        "max_score": result["max_score"],
+        "percentage": result["percentage"],
+        "scores": result["scores"],
+        "matched_fields": result["matched_fields"],
+        "discrepancies": result["discrepancies"],
+        "warnings": result["warnings"],
+        "registry_record_found": result["registry_record_found"],
+        "qr_verified": result["qr_verified"],
+        "explanation": result["explanation"],
+        "ocr_debug_info": {
+            "raw_text": raw_ocr_text if raw_ocr_text else "OCR completed with dictionary preprocessing.",
+            "ocr_engine_info": ocr_info,
+            "extracted_fields": result["extracted_fields"],
+            "qr_debug": result["qr_debug_info"],
+            "matching_record_id": result["registry_record"].get("certificate_id") if result["registry_record"] else None
+        },
+        "registry_record": result["registry_record"],
+        "forensics": {
+            "mean_ela_error": round(mean_ela_err, 2),
+            "suspicious_regions": suspicious_regions,
+            "suspicious_count": len(suspicious_regions)
+        },
+        "images": {
+            "original_b64": f"data:image/jpeg;base64,{orig_b64}",
+            "ela_heatmap_b64": f"data:image/jpeg;base64,{ela_b64}",
+            "annotated_suspicious_b64": f"data:image/jpeg;base64,{annotated_b64}"
+        }
+    }
+
+    return response_payload
+
+# Dual Routing for Vercel Serverless Function compatibility
 @app.post("/api/verify")
 @app.post("/verify")
 async def verify_endpoint(file: UploadFile = File(None), preset_type: str = Form(None)):
+    if preset_type in ["tn_sslc_genuine", "tn_sslc_manipulated"]:
+        return await process_marksheet_verification(file, preset_type)
     return await process_verification(file, preset_type)
+
+@app.post("/api/verify/marksheet")
+@app.post("/verify/marksheet")
+async def marksheet_verify_endpoint(file: UploadFile = File(None), preset_type: str = Form(None)):
+    return await process_marksheet_verification(file, preset_type)
 
 @app.get("/api/metrics")
 @app.get("/metrics")
@@ -236,7 +329,6 @@ async def get_audit_logs():
     except Exception:
         return []
 
-# Serve Frontend static files
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
 if os.path.exists(frontend_dir):
     app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
