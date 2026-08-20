@@ -169,9 +169,9 @@ def create_demo_certificates():
 
 def create_tn_sslc_sample(preset_type="tn_sslc_genuine"):
     """
-    Generates realistic Tamil Nadu State Board SSLC (Class X) Marksheet image.
-    Genuine: ANGULAKSHMI T (Cert ID: 24353750, Reg: 5191247, Total: 451)
-    Manipulated: Altered Total Marks to 499 with font mismatch & no valid QR.
+    Generates Tamil Nadu State Board SSLC Marksheet image.
+    Genuine: ANGULAKSHMI T (Cert ID: 24353750, Reg: 53959247, Total: 451)
+    Manipulated: Altered Total Marks to 499 (discrepancy detected).
     """
     width, height = 850, 1100
     img = Image.new("RGB", (width, height), (255, 253, 248))
@@ -186,26 +186,26 @@ def create_tn_sslc_sample(preset_type="tn_sslc_genuine"):
     font_bold = load_font(14)
 
     draw.text((width // 2, 50), "GOVERNMENT OF TAMIL NADU", fill=(140, 30, 30), font=font_title, anchor="mm")
-    draw.text((width // 2, 78), "DIRECTORATE OF GOVERNMENT EXAMINATIONS, CHENNAI - 600 006", fill=(30, 30, 30), font=font_sub, anchor="mm")
+    draw.text((width // 2, 78), "DIRECTORATE OF GOVERNMENT EXAMINATIONS, CHENNAI", fill=(30, 30, 30), font=font_sub, anchor="mm")
     draw.text((width // 2, 104), "SSLC MARKSHEET / இடைநிலைப் பள்ளி விடுப்புச் சான்றிதழ்", fill=(10, 60, 130), font=font_bold, anchor="mm")
     draw.line([(50, 125), (width - 50, 125)], fill=(200, 160, 60), width=2)
 
-    cert_id_str = "24353750" if preset_type == "tn_sslc_genuine" else "24359999"
-    draw.text((620, 138), f"CERTIFICATE NO : {cert_id_str}", fill=(180, 20, 20), font=font_bold)
-    draw.text((620, 158), "SESSION : APR 2023", fill=(40, 40, 40), font=font_body)
+    cert_id_str = "24353750"
+    draw.text((580, 138), f"CERTIFICATE NO : {cert_id_str}", fill=(180, 20, 20), font=font_bold)
+    draw.text((580, 158), "SESSION : APR 2023", fill=(40, 40, 40), font=font_body)
 
     draw.rectangle([50, 185, width - 50, 310], fill=(248, 250, 255), outline=(180, 200, 230), width=1)
     
-    name_str = "ANGULAKSHMI T" if preset_type == "tn_sslc_genuine" else "ANGULAKSHMI S"
-    reg_str = "5191247" if preset_type == "tn_sslc_genuine" else "5191999"
+    name_str = "ANGULAKSHMI T"
+    reg_str = "53959247"
 
     draw.text((70, 200), f"NAME OF CANDIDATE  : {name_str}", fill=(20, 20, 20), font=font_bold)
     draw.text((70, 226), f"REGISTER NUMBER    : {reg_str}", fill=(20, 20, 20), font=font_bold)
-    draw.text((70, 252), "DATE OF BIRTH      : 14/06/2007", fill=(20, 20, 20), font=font_body)
-    draw.text((70, 278), "FATHER'S NAME      : THANGARAJ M", fill=(20, 20, 20), font=font_body)
+    draw.text((70, 252), "DATE OF BIRTH      : 07/07/2007", fill=(20, 20, 20), font=font_body)
+    draw.text((70, 278), "FATHER'S NAME      : THANGARAJ A", fill=(20, 20, 20), font=font_body)
 
-    draw.text((500, 200), "COURSE : SSLC (CLASS X)", fill=(20, 20, 20), font=font_body)
-    draw.text((500, 226), "MOTHER : LAKSHMI T", fill=(20, 20, 20), font=font_body)
+    draw.text((500, 200), "COURSE : SSLC", fill=(20, 20, 20), font=font_body)
+    draw.text((500, 226), "MOTHER : CHITHRA T", fill=(20, 20, 20), font=font_body)
     draw.text((500, 252), "SCHOOL : GOVT HIGHER SECONDARY SCHOOL", fill=(20, 20, 20), font=font_body)
 
     draw.rectangle([50, 335, width - 50, 370], fill=(140, 30, 30))
@@ -237,34 +237,14 @@ def create_tn_sslc_sample(preset_type="tn_sslc_genuine"):
     total_color = (20, 35, 75) if preset_type == "tn_sslc_genuine" else (180, 20, 20)
     draw.text((550, y + 28), f"TOTAL MARKS: {total_val} / 500   RESULT: PASS", fill=total_color, font=font_bold)
 
-    if preset_type == "tn_sslc_genuine":
-        qr_payload = json.dumps({
-            "cert_id": "24353750",
-            "reg_no": "5191247",
-            "name": "ANGULAKSHMI T",
-            "dob": "14/06/2007",
-            "total_marks": 451
-        })
-        qr = qrcode.QRCode(box_size=3, border=1)
-        qr.add_data(qr_payload)
-        qr.make(fit=True)
-        qr_img = qr.make_image(fill_color="black", back_color="white").resize((120, 120))
-        img.paste(qr_img, (70, 900))
-        draw.text((70, 1030), "Scan to Verify TN Registry", fill=(80, 80, 80), font=load_font(11))
-    else:
-        # Tampered preset: draw corrupted / modified QR payload
-        qr_payload_bad = json.dumps({
-            "cert_id": "24359999",
-            "reg_no": "5191999",
-            "name": "ANGULAKSHMI S",
-            "dob": "14/06/2007",
-            "total_marks": 499
-        })
-        qr_bad = qrcode.QRCode(box_size=3, border=1)
-        qr_bad.add_data(qr_payload_bad)
-        qr_bad.make(fit=True)
-        qr_img_bad = qr_bad.make_image(fill_color="black", back_color="white").resize((120, 120))
-        img.paste(qr_img_bad, (70, 900))
+    # Embed Normalized QR Code payload
+    qr_payload = "TNSSLC|24353750|53959247|ANGULAKSHMI T|APR 2023"
+    qr = qrcode.QRCode(box_size=3, border=1)
+    qr.add_data(qr_payload)
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="black", back_color="white").resize((120, 120))
+    img.paste(qr_img, (70, 900))
+    draw.text((70, 1030), "Scan to Verify TN Registry", fill=(80, 80, 80), font=load_font(11))
 
     draw_seal(draw, center=(425, 950), radius=45)
     draw.line([(600, 980), (780, 980)], fill=(40, 40, 40), width=2)

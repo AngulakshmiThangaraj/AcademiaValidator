@@ -8,7 +8,6 @@ def get_db_path():
         return custom_path
     
     default_dir = os.path.dirname(__file__)
-    # Check if local dir is writable
     if os.access(default_dir, os.W_OK):
         return os.path.join(default_dir, "sih_certificates.db")
     
@@ -60,13 +59,13 @@ def init_db():
     );
     """)
 
-    # Create Indexes for fast lookup
+    # Indexes
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_tn_cert_id ON tn_sslc_marksheets(certificate_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_tn_reg_no ON tn_sslc_marksheets(register_no);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_tn_name ON tn_sslc_marksheets(student_name);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_tn_dob ON tn_sslc_marksheets(dob);")
 
-    # 3. Table for Verification Audit Logs
+    # Audit Logs
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS verification_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,91 +104,51 @@ def init_db():
             9.12,
             "18-05-2024",
             "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8"
-        ),
-        (
-            "CERT-2025-1003",
-            "Arjun Iyer",
-            "3122211003",
-            "INDIAN INSTITUTE OF TECHNOLOGY, MADRAS",
-            "BACHELOR OF TECHNOLOGY IN MECHANICAL ENGINEERING",
-            8.40,
-            "20-05-2024",
-            "b1b2b3b4b5b6b7b8b9b0a1a2a3a4a5a6"
         )
     ]
 
     for record in seed_records:
         cursor.execute("""
-        INSERT OR IGNORE INTO registered_certificates 
+        INSERT OR REPLACE INTO registered_certificates 
         (cert_id, student_name, reg_no, institution, course, cgpa, issue_date, sha256_hash)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, record)
 
-    # Seed Tamil Nadu SSLC Marksheet Sample Records
-    # Compute SHA-256 hash for sample QR payload
-    sample_qr_payload = '{"cert_id":"24353750","reg_no":"5191247","name":"ANGULAKSHMI T","dob":"14/06/2007","total_marks":451}'
-    sample_qr_hash = hashlib.sha256(sample_qr_payload.encode('utf-8')).hexdigest()
+    # Seed SSLC Marksheet Record
+    qr_payload = "TNSSLC|24353750|53959247|ANGULAKSHMI T|APR 2023"
+    qr_hash = hashlib.sha256(qr_payload.encode('utf-8')).hexdigest()
 
     tn_seed_records = [
         (
             "24353750",
-            "5191247",
+            "53959247",
             "ANGULAKSHMI T",
-            "14/06/2007",
-            "THANGARAJ M",
-            "LAKSHMI T",
-            "GOVT HIGHER SECONDARY SCHOOL, CHENNAI",
-            "SSLC (CLASS X)",
+            "07/07/2007",
+            "THANGARAJ A",
+            "CHITHRA T",
+            "GOVT HIGHER SECONDARY SCHOOL",
+            "SSLC",
             451,
             "PASS",
             "APR 2023",
-            sample_qr_hash
-        ),
-        (
-            "24353751",
-            "5191248",
-            "KARTHIK R",
-            "22/09/2006",
-            "RAMESH K",
-            "SARASWATHI R",
-            "ST. JOSEPH HIGHER SECONDARY SCHOOL, TRICHY",
-            "SSLC (CLASS X)",
-            482,
-            "PASS",
-            "APR 2023",
-            hashlib.sha256('{"cert_id":"24353751","reg_no":"5191248","name":"KARTHIK R","dob":"22/09/2006","total_marks":482}'.encode()).hexdigest()
-        ),
-        (
-            "24353752",
-            "5191249",
-            "MEENA S",
-            "05/11/2007",
-            "SUNDARAM P",
-            "KAVITHA S",
-            "BHARATHI GIRLS HIGH SCHOOL, MADURAI",
-            "SSLC (CLASS X)",
-            395,
-            "PASS",
-            "MARCH 2023",
-            hashlib.sha256('{"cert_id":"24353752","reg_no":"5191249","name":"MEENA S","dob":"05/11/2007","total_marks":395}'.encode()).hexdigest()
+            qr_hash
         )
     ]
 
     for tn_record in tn_seed_records:
         cursor.execute("""
-        INSERT OR IGNORE INTO tn_sslc_marksheets
+        INSERT OR REPLACE INTO tn_sslc_marksheets
         (certificate_id, register_no, student_name, dob, father_name, mother_name, institution, course, total_marks, result, passing_year, qr_payload_hash)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, tn_record)
 
     conn.commit()
     conn.close()
-    print("Database initialized & seeded with TN SSLC sample records successfully!")
 
 def get_tn_marksheet_by_id(cert_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tn_sslc_marksheets WHERE certificate_id = ?", (cert_id,))
+    cursor.execute("SELECT * FROM tn_sslc_marksheets WHERE certificate_id = ?", (str(cert_id).strip(),))
     row = cursor.fetchone()
     conn.close()
     return dict(row) if row else None
@@ -197,7 +156,7 @@ def get_tn_marksheet_by_id(cert_id):
 def get_tn_marksheet_by_reg_no(reg_no):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tn_sslc_marksheets WHERE register_no = ?", (reg_no,))
+    cursor.execute("SELECT * FROM tn_sslc_marksheets WHERE register_no = ?", (str(reg_no).strip(),))
     row = cursor.fetchone()
     conn.close()
     return dict(row) if row else None
