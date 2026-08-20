@@ -1,10 +1,19 @@
 import hashlib
 import json
 import io
-import cv2
+import re
 import numpy as np
 from PIL import Image
 import qrcode
+
+# Safe imports for C-based QR libraries
+HAS_OPENCV = False
+try:
+    import cv2
+    HAS_OPENCV = True
+except Exception:
+    HAS_OPENCV = False
+
 from database import get_certificate_by_id
 
 def compute_image_sha256(image_bytes):
@@ -13,28 +22,28 @@ def compute_image_sha256(image_bytes):
 
 def decode_qr_code(image_input):
     """
-    Decodes QR code from PIL Image or numpy array using OpenCV QRCodeDetector with pyzbar fallback.
+    Decodes QR code payload with safe fallback protection for serverless environments.
     """
     if isinstance(image_input, Image.Image):
+        img_np = np.array(image_input.convert("RGB"))
+    else:
         img_np = np.array(image_input)
-    else:
-        img_np = image_input
 
-    if len(img_np.shape) == 3 and img_np.shape[2] == 3:
-        gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
-    else:
-        gray = img_np
+    # Strategy 1: Safe OpenCV QRCodeDetector if available
+    if HAS_OPENCV:
+        try:
+            gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY) if len(img_np.shape) == 3 else img_np
+            detector = cv2.QRCodeDetector()
+            data, bbox, _ = detector.detectAndDecode(gray)
+            if data:
+                return data
+        except Exception:
+            pass
 
-    # OpenCV QR Detector
-    detector = cv2.QRCodeDetector()
-    data, bbox, _ = detector.detectAndDecode(gray)
-    if data:
-        return data
-
-    # Fallback to pyzbar if available
+    # Strategy 2: Safe PyZBar if available
     try:
         from pyzbar.pyzbar import decode
-        decoded = decode(gray)
+        decoded = decode(img_np)
         if decoded:
             return decoded[0].data.decode("utf-8")
     except Exception:
@@ -48,11 +57,11 @@ def verify_qr_and_id(qr_data_str, cert_id_from_ocr=None):
     Returns: (is_valid, decoded_payload, match_details)
     """
     if not qr_data_str:
-        return False, None, "No QR Code detected on document"
+        return False, None, "No QR Code payload detected on document"
 
     try:
         payload = json.loads(qr_data_str)
-    except json.JSONDecodeError:
+    except Exception:
         return False, {"raw_qr": qr_data_str}, "QR code contains unparseable or corrupted payload"
 
     cert_id = payload.get("cert_id") or cert_id_from_ocr

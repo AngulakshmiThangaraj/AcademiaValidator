@@ -3,9 +3,9 @@ import io
 import hashlib
 import json
 import sys
-from PIL import Image, ImageDraw, ImageFont
-import cv2
+import tempfile
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 import qrcode
 
 # Add backend directory to sys.path
@@ -15,8 +15,16 @@ if backend_dir not in sys.path:
 
 from database import register_certificate, init_db
 
-SAMPLES_DIR = os.path.join(os.path.dirname(__file__), "samples")
-os.makedirs(SAMPLES_DIR, exist_ok=True)
+# Determine writable samples directory (local or /tmp for Vercel)
+if os.access(backend_dir, os.W_OK):
+    SAMPLES_DIR = os.path.join(backend_dir, "samples")
+else:
+    SAMPLES_DIR = os.path.join(tempfile.gettempdir(), "samples")
+
+try:
+    os.makedirs(SAMPLES_DIR, exist_ok=True)
+except Exception:
+    pass
 
 def load_font(size=18):
     font_names = ["arial.ttf", "dejavusans.ttf", "calibri.ttf", "liberation-sans.ttf"]
@@ -35,17 +43,19 @@ def draw_seal(draw, center=(425, 940), radius=42):
     draw.text((cx - 30, cy - 6), "OFFICIAL SEAL", fill=(180, 40, 40), font=font)
 
 def create_demo_certificates():
-    init_db()
-    print("Generating preset demo certificates (Certificate A Genuine & Certificate B Manipulated)...")
-    
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Init DB notice: {e}")
+
+    width, height = 850, 1100
+
     # -------------------------------------------------------------
     # CERTIFICATE A: Genuine Certificate
     # -------------------------------------------------------------
-    width, height = 850, 1100
     img_a = Image.new("RGB", (width, height), (254, 253, 250))
     draw_a = ImageDraw.Draw(img_a)
 
-    # Decorative Border
     draw_a.rectangle([20, 20, width - 20, height - 20], outline=(30, 50, 90), width=4)
     draw_a.rectangle([28, 28, width - 28, height - 28], outline=(190, 160, 70), width=2)
 
@@ -54,12 +64,10 @@ def create_demo_certificates():
     font_body = load_font(15)
     font_bold = load_font(15)
 
-    # Header
     draw_a.text((width // 2, 70), "NATIONAL INSTITUTE OF TECHNOLOGY, TIRUCHIRAPPALLI", fill=(20, 35, 75), font=font_title, anchor="mm")
     draw_a.text((width // 2, 105), "OFFICIAL STATEMENT OF MARKS & ACADEMIC TRANSCRIPT", fill=(90, 90, 90), font=font_sub, anchor="mm")
     draw_a.line([(60, 130), (width - 60, 130)], fill=(190, 160, 70), width=2)
 
-    # Student Info
     draw_a.rectangle([60, 150, width - 60, 270], fill=(245, 248, 252), outline=(200, 210, 230), width=1)
     draw_a.text((80, 165), "Student Name   : Rohan Verma", fill=(20, 20, 20), font=font_bold)
     draw_a.text((80, 195), "Register No    : 3122211001", fill=(20, 20, 20), font=font_body)
@@ -67,7 +75,6 @@ def create_demo_certificates():
     draw_a.text((550, 165), "Cert ID: CERT-2025-1001", fill=(50, 50, 50), font=font_body)
     draw_a.text((550, 195), "Date   : 15-05-2024", fill=(50, 50, 50), font=font_body)
 
-    # Table Header
     draw_a.rectangle([60, 300, width - 60, 335], fill=(30, 50, 90))
     draw_a.text((80, 308), "Code", fill=(255, 255, 255), font=font_bold)
     draw_a.text((170, 308), "Subject Title", fill=(255, 255, 255), font=font_bold)
@@ -93,12 +100,10 @@ def create_demo_certificates():
         draw_a.text((670, y + 8), f"{mark} / 100", fill=(20, 20, 20), font=font_bold)
         y += 35
 
-    # Total CGPA Summary
     draw_a.rectangle([60, y + 10, width - 60, y + 55], fill=(235, 242, 255), outline=(180, 200, 230))
     draw_a.text((80, y + 22), "Total Marks: 535 / 600", fill=(20, 35, 75), font=font_bold)
     draw_a.text((540, y + 22), "CGPA: 8.75 / 10.0", fill=(20, 35, 75), font=font_bold)
 
-    # QR Code for Cert A
     qr_payload_a = json.dumps({
         "cert_id": "CERT-2025-1001",
         "reg_no": "3122211001",
@@ -118,55 +123,70 @@ def create_demo_certificates():
     draw_a.text((615, 975), "Controller of Examinations", fill=(60, 60, 60), font=load_font(12))
     draw_a.text((620, 940), "Dr. A. K. Sharma", fill=(20, 30, 90), font=load_font(16))
 
-    path_a = os.path.join(SAMPLES_DIR, "certificate_a_genuine.jpg")
-    img_a.save(path_a, quality=95)
+    buf_a = io.BytesIO()
+    img_a.save(buf_a, format="JPEG", quality=95)
+    bytes_a = buf_a.getvalue()
+    hash_a = hashlib.sha256(bytes_a).hexdigest()
 
-    # Compute exact saved file hash
-    with open(path_a, "rb") as f_a:
-        hash_a = hashlib.sha256(f_a.read()).hexdigest()
+    try:
+        path_a = os.path.join(SAMPLES_DIR, "certificate_a_genuine.jpg")
+        with open(path_a, "wb") as f:
+            f.write(bytes_a)
+    except Exception:
+        pass
 
-    register_certificate(
-        cert_id="CERT-2025-1001",
-        student_name="Rohan Verma",
-        reg_no="3122211001",
-        institution="NATIONAL INSTITUTE OF TECHNOLOGY, TIRUCHIRAPPALLI",
-        course="BACHELOR OF TECHNOLOGY IN COMPUTER SCIENCE & ENGINEERING",
-        cgpa=8.75,
-        issue_date="15-05-2024",
-        sha256_hash=hash_a
-    )
+    try:
+        register_certificate(
+            cert_id="CERT-2025-1001",
+            student_name="Rohan Verma",
+            reg_no="3122211001",
+            institution="NATIONAL INSTITUTE OF TECHNOLOGY, TIRUCHIRAPPALLI",
+            course="BACHELOR OF TECHNOLOGY IN COMPUTER SCIENCE & ENGINEERING",
+            cgpa=8.75,
+            issue_date="15-05-2024",
+            sha256_hash=hash_a
+        )
+    except Exception:
+        pass
 
     # -------------------------------------------------------------
-    # CERTIFICATE B: Manipulated Certificate (Edited CGPA & Name + Resampled Patch)
+    # CERTIFICATE B: Manipulated Certificate
     # -------------------------------------------------------------
-    img_b_np = np.array(img_a.copy())
+    img_b = img_a.copy()
+    draw_b = ImageDraw.Draw(img_b)
 
-    # 1. Tamper CGPA box: erase "CGPA: 8.75 / 10.0" and replace with "CGPA: 9.95 / 10.0" in mismatched font
-    cv2.rectangle(img_b_np, (535, y + 15), (780, y + 50), (255, 255, 255), -1)
-    cv2.putText(img_b_np, "CGPA: 9.95 / 10.0 (GOLD)", (538, y + 42), cv2.FONT_HERSHEY_DUPLEX, 0.65, (180, 20, 20), 2)
+    # 1. Tamper CGPA
+    draw_b.rectangle([535, y + 15, 780, y + 50], fill=(255, 255, 255))
+    draw_b.text((538, y + 20), "CGPA: 9.95 / 10.0 (GOLD)", fill=(180, 20, 20), font=font_bold)
 
-    # 2. Tamper student name
-    cv2.rectangle(img_b_np, (215, 160), (450, 188), (245, 248, 252), -1)
-    cv2.putText(img_b_np, "Rohan Verma (RANK 1)", (217, 183), cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.85, (0, 0, 0), 2)
+    # 2. Tamper Name
+    draw_b.rectangle([215, 160, 450, 188], fill=(245, 248, 252))
+    draw_b.text((217, 165), "Rohan Verma (RANK 1)", fill=(0, 0, 0), font=font_bold)
 
-    # 3. Tamper CS301 Mark: change 92 to 99 with a high-compression blurry resampled patch
-    patch = img_b_np[338:368, 660:735].copy()
-    cv2.rectangle(patch, (0, 0), (75, 30), (255, 255, 255), -1)
-    cv2.putText(patch, "99 / 100", (2, 22), cv2.FONT_HERSHEY_TRIPLEX, 0.6, (0, 0, 160), 2)
-    pil_p = Image.fromarray(patch)
-    buf_p = io.BytesIO()
-    pil_p.save(buf_p, format="JPEG", quality=20)
-    buf_p.seek(0)
-    degraded_p = np.array(Image.open(buf_p))
-    img_b_np[338:368, 660:735] = degraded_p
+    # 3. Tamper Marks
+    draw_b.rectangle([660, 338, 735, 368], fill=(255, 255, 255))
+    draw_b.text((662, 342), "99 / 100", fill=(0, 0, 160), font=font_bold)
 
-    img_b = Image.fromarray(img_b_np)
-    path_b = os.path.join(SAMPLES_DIR, "certificate_b_manipulated.jpg")
-    img_b.save(path_b, quality=95)
+    buf_b = io.BytesIO()
+    img_b.save(buf_b, format="JPEG", quality=95)
+    bytes_b = buf_b.getvalue()
 
-    print(f"Sample Certificate A saved to: {path_a}")
-    print(f"Sample Certificate B saved to: {path_b}")
-    return path_a, path_b
+    try:
+        path_b = os.path.join(SAMPLES_DIR, "certificate_b_manipulated.jpg")
+        with open(path_b, "wb") as f:
+            f.write(bytes_b)
+    except Exception:
+        pass
+
+    return img_a, img_b
+
+def get_demo_certificate_bytes(preset_type):
+    """Returns sample image bytes in memory without disk dependency."""
+    img_a, img_b = create_demo_certificates()
+    target_img = img_a if preset_type == "genuine" else img_b
+    buf = io.BytesIO()
+    target_img.save(buf, format="JPEG", quality=95)
+    return buf.getvalue()
 
 if __name__ == "__main__":
     create_demo_certificates()
