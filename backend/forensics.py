@@ -38,10 +38,6 @@ def generate_ela_heatmap(image_input, quality=95, scale=18):
     height, width = ela_gray.shape
     heatmap_rgb = np.zeros((height, width, 3), dtype=np.uint8)
 
-    # Map error level intensity to RGB false colors
-    # Low difference (0-40) -> Dark Navy/Blue
-    # Medium difference (41-120) -> Cyan/Green
-    # High difference (121-255) -> Yellow/Red
     val = ela_gray.astype(np.float32) / 255.0
     heatmap_rgb[:, :, 0] = np.clip(val * 2.0 * 255, 0, 255).astype(np.uint8) # Red channel
     heatmap_rgb[:, :, 1] = np.clip((1.0 - np.abs(val - 0.5) * 2.0) * 255, 0, 255).astype(np.uint8) # Green channel
@@ -49,8 +45,12 @@ def generate_ela_heatmap(image_input, quality=95, scale=18):
 
     heatmap_pil = Image.fromarray(heatmap_rgb)
 
+    # Downsample copy for UI Base64 preview (Keeps JSON response < 100 KB for Vercel serverless safety)
+    preview_heatmap = heatmap_pil.copy()
+    preview_heatmap.thumbnail((600, 800))
+
     buf = io.BytesIO()
-    heatmap_pil.save(buf, format="JPEG", quality=90)
+    preview_heatmap.save(buf, format="JPEG", quality=80)
     heatmap_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
 
     mean_error = float(np.mean(ela_gray))
@@ -74,11 +74,13 @@ def detect_suspicious_regions(image_input, threshold=110):
     ela_gray = np.array(ela_img.convert("L"))
     img_height, img_width = ela_gray.shape
 
-    # Grid search for high variance patches (e.g. 60x30 text blocks)
+    # Grid search for high variance patches
     step_y, step_x = 40, 80
-    for y in range(120, img_height - 120, step_y):
-        for x in range(80, img_width - 80, step_x):
+    for y in range(120, max(121, img_height - 120), step_y):
+        for x in range(80, max(81, img_width - 80), step_x):
             patch = ela_gray[y:y+step_y, x:x+step_x]
+            if patch.size == 0:
+                continue
             patch_score = float(np.mean(patch))
 
             if patch_score > threshold:
@@ -89,9 +91,7 @@ def detect_suspicious_regions(image_input, threshold=110):
                     "anomaly_score": round(patch_score / 2.55, 1)
                 })
 
-    # Deduplicate overlapping bounding boxes
     suspicious_regions = sorted(suspicious_regions, key=lambda r: r.get("anomaly_score", 0), reverse=True)[:4]
-
     return suspicious_regions
 
 def annotate_suspicious_image(image_input, suspicious_regions):
@@ -115,12 +115,12 @@ def annotate_suspicious_image(image_input, suspicious_regions):
         x, y, w, h = region["bbox"]
         color = (230, 40, 40) if region.get("severity") == "HIGH" else (240, 140, 20)
         
-        # Bounding box
         draw.rectangle([x, y, x + w, y + h], outline=color, width=3)
-        # Header tag box
         draw.rectangle([x, max(0, y - 20), x + min(w, 140), y], fill=color)
         draw.text((x + 4, max(0, y - 18)), "SUSPICIOUS", fill=(255, 255, 255), font=font)
 
+    # Downsample preview thumbnail for Vercel JSON payload safety
+    annotated.thumbnail((600, 800))
     buf = io.BytesIO()
-    annotated.save(buf, format="JPEG", quality=90)
+    annotated.save(buf, format="JPEG", quality=80)
     return base64.b64encode(buf.getvalue()).decode("utf-8")

@@ -1,4 +1,5 @@
-// Global State
+// Global Config & State
+const API_BASE = window.BACKEND_URL || '';
 let currentVerificationData = null;
 let currentActiveTab = 'orig';
 
@@ -37,13 +38,14 @@ async function runPreset(type) {
     const formData = new FormData();
     formData.append('preset_type', type);
 
-    const response = await fetch('/api/verify', {
+    const response = await fetch(`${API_BASE}/api/verify`, {
       method: 'POST',
       body: formData
     });
 
     if (!response.ok) {
-      throw new Error(`API Error ${response.status}: ${await response.text()}`);
+      const errText = await response.text();
+      throw new Error(`API Error ${response.status}: ${errText}`);
     }
 
     const data = await response.json();
@@ -71,13 +73,14 @@ async function uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch('/api/verify', {
+    const response = await fetch(`${API_BASE}/api/verify`, {
       method: 'POST',
       body: formData
     });
 
     if (!response.ok) {
-      throw new Error(`API Error ${response.status}: ${await response.text()}`);
+      const errText = await response.text();
+      throw new Error(`API Error ${response.status}: ${errText}`);
     }
 
     const data = await response.json();
@@ -211,7 +214,7 @@ function renderResults(data) {
   // 5. Explainable Report Bullets
   const bulletList = document.getElementById('report-bullets-list');
   bulletList.innerHTML = '';
-  data.explainable_report.forEach(bullet => {
+  (data.explainable_report || []).forEach(bullet => {
     const li = document.createElement('li');
     li.textContent = bullet;
     if (bullet.startsWith('✓')) {
@@ -246,20 +249,20 @@ function switchViewerTab(tabType) {
 
   if (!currentVerificationData) return;
 
-  const imgs = currentVerificationData.images;
+  const imgs = currentVerificationData.images || {};
   if (tabType === 'orig') {
-    viewerImg.src = imgs.original_b64;
+    viewerImg.src = imgs.original_b64 || '';
   } else if (tabType === 'ela') {
-    viewerImg.src = imgs.ela_heatmap_b64;
+    viewerImg.src = imgs.ela_heatmap_b64 || '';
   } else if (tabType === 'annot') {
-    viewerImg.src = imgs.annotated_suspicious_b64;
+    viewerImg.src = imgs.annotated_suspicious_b64 || '';
   }
 }
 
 // Fetch Model Metrics
 async function fetchModelMetrics() {
   try {
-    const response = await fetch('/api/metrics');
+    const response = await fetch(`${API_BASE}/api/metrics`);
     if (response.ok) {
       const m = await response.json();
       document.getElementById('metric-acc').textContent = `${(m.accuracy * 100).toFixed(1)}%`;
@@ -279,7 +282,7 @@ async function fetchModelMetrics() {
   }
 }
 
-// Certificate Registration Form Submit Handler
+// Certificate Registration Form Handler
 async function handleRegisterSubmit(event) {
   event.preventDefault();
 
@@ -293,7 +296,7 @@ async function handleRegisterSubmit(event) {
   formData.append('issue_date', document.getElementById('reg-date').value);
 
   try {
-    const response = await fetch('/api/register', {
+    const response = await fetch(`${API_BASE}/api/register`, {
       method: 'POST',
       body: formData
     });

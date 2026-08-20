@@ -113,9 +113,11 @@ async def process_verification(file: UploadFile = None, preset_type: str = Form(
 
         annotated_b64 = annotate_suspicious_image(pil_image, suspicious_regions)
 
-        # Original Base64
+        # Downsample original preview thumbnail for UI Base64 display (< 50 KB)
+        preview_orig = pil_image.copy()
+        preview_orig.thumbnail((600, 800))
         buf_orig = io.BytesIO()
-        pil_image.save(buf_orig, format="JPEG", quality=90)
+        preview_orig.save(buf_orig, format="JPEG", quality=80)
         orig_b64 = base64.b64encode(buf_orig.getvalue()).decode("utf-8")
 
         # Hash Match
@@ -187,7 +189,7 @@ async def process_verification(file: UploadFile = None, preset_type: str = Form(
         raise he
     except Exception as err:
         print(f"Error during verification execution: {err}")
-        raise HTTPException(status_code=500, detail=f"Verification service encounter: {str(err)}")
+        raise HTTPException(status_code=500, detail=f"Verification service error: {str(err)}")
 
 # Dual Routing for Vercel Serverless Function compatibility (/api/verify and /verify)
 @app.post("/api/verify")
