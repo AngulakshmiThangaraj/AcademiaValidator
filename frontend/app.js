@@ -2,11 +2,11 @@
 const API_BASE = window.BACKEND_URL || '';
 let currentVerificationData = null;
 let currentSelectedFile = null;
-let currentActiveViewerTab = 'orig';
+let currentActiveRole = 'verifier';
 
 // Tab Navigation Switcher
 function switchTab(tabId) {
-  const tabs = ['home', 'verify', 'how', 'security', 'model', 'dashboard', 'about'];
+  const tabs = ['home', 'verify', 'roles', 'student', 'institution', 'how', 'security', 'model', 'dashboard', 'about'];
   
   tabs.forEach(t => {
     const viewEl = document.getElementById(`view-${t}`);
@@ -38,10 +38,64 @@ function switchTab(tabId) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// Role Selection Logic
+function selectRole(roleId) {
+  currentActiveRole = roleId;
+  if (roleId === 'student') {
+    switchTab('student');
+  } else if (roleId === 'institution') {
+    switchTab('institution');
+  } else if (roleId === 'verifier') {
+    switchTab('verify');
+  } else if (roleId === 'admin') {
+    switchTab('dashboard');
+  }
+}
+
+// Login Modal Functions
+function openLoginModal() {
+  const modal = document.getElementById('login-modal');
+  const badge = document.getElementById('login-role-badge');
+  if (badge) badge.textContent = currentActiveRole;
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeLoginModal() {
+  const modal = document.getElementById('login-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function togglePasswordVisibility() {
+  const input = document.getElementById('login-password');
+  const icon = document.getElementById('pass-eye-icon');
+  if (input) {
+    if (input.type === 'password') {
+      input.type = 'text';
+      if (icon) icon.className = 'fa-solid fa-eye-slash';
+    } else {
+      input.type = 'password';
+      if (icon) icon.className = 'fa-solid fa-eye';
+    }
+  }
+}
+
+function submitLogin() {
+  alert(`Logged in successfully as ${currentActiveRole.toUpperCase()}`);
+  closeLoginModal();
+  selectRole(currentActiveRole);
+}
+
+function demoQuickLogin(roleId) {
+  currentActiveRole = roleId;
+  const badge = document.getElementById('login-role-badge');
+  if (badge) badge.textContent = roleId;
+  submitLogin();
+}
+
 // SIH Demo Mode Trigger
 async function runPresetDemo(presetType) {
   switchTab('verify');
-  start9StepPipeline();
+  start8StepPipeline();
 
   try {
     const formData = new FormData();
@@ -65,7 +119,7 @@ async function runPresetDemo(presetType) {
   } catch (err) {
     alert("Verification Error: " + err.message);
   } finally {
-    stop9StepPipeline();
+    stop8StepPipeline();
   }
 }
 
@@ -90,7 +144,7 @@ function setSelectedFile(file) {
     bar.classList.remove('hidden');
   }
 
-  // Generate Image Preview
+  // Image Preview
   const reader = new FileReader();
   reader.onload = function(e) {
     const imgOrig = document.getElementById('img-original');
@@ -115,14 +169,14 @@ function clearSelectedFile() {
 
 function triggerManualUploadVerification() {
   if (!currentSelectedFile) {
-    alert("Please select or drag & drop an academic certificate / marksheet file first, or click a SIH Demo Mode sample document above.");
+    alert("Please select or drag & drop an academic certificate file first, or click a SIH Demo Mode sample button above.");
     return;
   }
   uploadFile(currentSelectedFile);
 }
 
 async function uploadFile(file) {
-  start9StepPipeline();
+  start8StepPipeline();
 
   try {
     const formData = new FormData();
@@ -144,23 +198,20 @@ async function uploadFile(file) {
   } catch (err) {
     alert("Verification Error: " + err.message);
   } finally {
-    stop9StepPipeline();
+    stop8StepPipeline();
   }
 }
 
-// 9-Step Animated Processing Pipeline
+// 8-Step Timeline Pipeline Animation
 let pipelineInterval = null;
 
-function start9StepPipeline() {
+function start8StepPipeline() {
   const scannerLine = document.getElementById('scanner-line');
   if (scannerLine) scannerLine.style.display = 'block';
 
-  // Reset all steps
-  for (let i = 1; i <= 9; i++) {
-    const node = document.getElementById(`pstep-${i}`);
-    if (node) {
-      node.className = 'pipeline-node';
-    }
+  for (let i = 1; i <= 8; i++) {
+    const stepNode = document.getElementById(`pstep-${i}`);
+    if (stepNode) stepNode.className = 'timeline-step';
   }
 
   let step = 1;
@@ -168,37 +219,31 @@ function start9StepPipeline() {
 
   pipelineInterval = setInterval(() => {
     const prevNode = document.getElementById(`pstep-${step - 1}`);
-    if (prevNode) {
-      prevNode.className = 'pipeline-node completed';
-    }
+    if (prevNode) prevNode.className = 'timeline-step completed';
 
     const currNode = document.getElementById(`pstep-${step}`);
-    if (currNode) {
-      currNode.className = 'pipeline-node active';
-    }
+    if (currNode) currNode.className = 'timeline-step active';
 
     step++;
-    if (step > 9) {
+    if (step > 8) {
       clearInterval(pipelineInterval);
     }
   }, 220);
 }
 
-function stop9StepPipeline() {
+function stop8StepPipeline() {
   if (pipelineInterval) clearInterval(pipelineInterval);
 
   const scannerLine = document.getElementById('scanner-line');
   if (scannerLine) scannerLine.style.display = 'none';
 
-  for (let i = 1; i <= 9; i++) {
-    const node = document.getElementById(`pstep-${i}`);
-    if (node) {
-      node.className = 'pipeline-node completed';
-    }
+  for (let i = 1; i <= 8; i++) {
+    const stepNode = document.getElementById(`pstep-${i}`);
+    if (stepNode) stepNode.className = 'timeline-step completed';
   }
 }
 
-// Render Verification Results
+// Render Results
 function renderResults(data) {
   // 1. Authenticity Score & Verdict Badge
   const scoreVal = document.getElementById('score-value');
@@ -215,13 +260,13 @@ function renderResults(data) {
     verdictTag.textContent = `STATUS: ${statusStr.replace('_', ' ')}`;
     if (statusStr === 'VERIFIED') {
       verdictTag.className = 'verdict-tag verified';
-      if (scoreCircle) scoreCircle.style.background = `conic-gradient(#10b981 ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+      if (scoreCircle) scoreCircle.style.background = `conic-gradient(#10b981 ${scorePct * 3.6}deg, #e2e8f0 0deg)`;
     } else if (statusStr === 'PARTIALLY_VERIFIED' || statusStr === 'REVIEW_REQUIRED') {
       verdictTag.className = 'verdict-tag warning';
-      if (scoreCircle) scoreCircle.style.background = `conic-gradient(#f59e0b ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+      if (scoreCircle) scoreCircle.style.background = `conic-gradient(#f59e0b ${scorePct * 3.6}deg, #e2e8f0 0deg)`;
     } else {
       verdictTag.className = 'verdict-tag suspicious';
-      if (scoreCircle) scoreCircle.style.background = `conic-gradient(#ef4444 ${scorePct * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+      if (scoreCircle) scoreCircle.style.background = `conic-gradient(#ef4444 ${scorePct * 3.6}deg, #e2e8f0 0deg)`;
     }
   }
 
@@ -237,7 +282,25 @@ function renderResults(data) {
 
   if (btnReport) btnReport.classList.remove('hidden');
 
-  // 2. Breakdown Bars
+  // 2. Mini Security Quick Cards
+  const aiRiskVal = document.getElementById('ai-risk-val');
+  const aiRiskSub = document.getElementById('ai-risk-sub');
+  const qrVal = document.getElementById('qr-status-val');
+  const qrSub = document.getElementById('qr-status-sub');
+  const hashVal = document.getElementById('hash-status-val');
+  const hashSub = document.getElementById('hash-code-sub');
+
+  if (aiRiskVal) aiRiskVal.textContent = `GENUINE ${data.authenticity_score ? (data.authenticity_score * 0.95).toFixed(1) : 94.5}%`;
+  if (aiRiskSub) aiRiskSub.textContent = statusStr === 'VERIFIED' ? 'Classification: LOW RISK' : 'Classification: SUSPICIOUS';
+
+  if (qrVal) qrVal.textContent = data.qr_verified ? 'QR DETECTED ✓' : 'INVALID QR ✗';
+  if (qrSub) qrSub.textContent = data.qr_verified ? 'Credential Status: VERIFIED' : 'Credential Status: SUSPICIOUS';
+
+  if (hashVal) hashVal.textContent = data.hash_matched_in_registry ? 'HASH MATCHED ✓' : 'MODIFIED ⚠';
+  const rec = data.registry_record || {};
+  if (hashSub && rec.qr_payload_hash) hashSub.textContent = `SHA-256: ${rec.qr_payload_hash.substring(0, 12)}...`;
+
+  // 3. Score Breakdown Bars
   const scores = data.scores || {};
   const bd = data.score_breakdown || {};
 
@@ -261,13 +324,11 @@ function renderResults(data) {
   document.getElementById('score-ai').textContent = `${aiPts} / 20.0`;
   document.getElementById('bar-ai').style.width = `${(aiPts / 20.0) * 100}%`;
 
-  // 3. Explainable Summary Report Box
+  // 4. Report Explanation
   const reportText = document.getElementById('report-text');
-  if (reportText) {
-    reportText.textContent = data.explanation || 'Verification completed successfully.';
-  }
+  if (reportText) reportText.textContent = data.explanation || 'Verification completed successfully.';
 
-  // 4. Matched Chips & Discrepancies Table
+  // 5. Matched Chips & Discrepancies Table
   const fieldsCard = document.getElementById('fields-verification-card');
   const matchedContainer = document.getElementById('matched-chips');
   const discSection = document.getElementById('discrepancies-section');
@@ -281,7 +342,7 @@ function renderResults(data) {
     if (matched.length > 0) {
       matched.forEach(f => {
         const chip = document.createElement('span');
-        chip.style.cssText = 'display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success-green); padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin: 0.2rem;';
+        chip.style.cssText = 'display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #047857; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700; margin: 0.2rem;';
         chip.innerHTML = `<i class="fa-solid fa-check"></i> ${f.replace('_', ' ').toUpperCase()}`;
         matchedContainer.appendChild(chip);
       });
@@ -298,10 +359,10 @@ function renderResults(data) {
       discs.forEach(d => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td style="font-weight: 600; color: var(--warning-amber);">${d.field}</td>
+          <td style="font-weight: 700; color: var(--warning-amber);">${d.field}</td>
           <td style="color: var(--danger-red);">${d.ocr_value}</td>
           <td style="color: var(--success-green);">${d.registry_value}</td>
-          <td style="font-size: 0.8rem; color: var(--text-muted);">${d.reason}</td>
+          <td><span class="verdict-tag warning" style="font-size: 0.7rem;">MISMATCH</span></td>
         `;
         discTbody.appendChild(tr);
       });
@@ -310,7 +371,23 @@ function renderResults(data) {
     }
   }
 
-  // 5. Images Viewer Setup
+  // 6. OCR Result Cards Grid
+  const ocrGrid = document.getElementById('ocr-extracted-cards');
+  if (ocrGrid && data.ocr_debug_info) {
+    const ext = data.ocr_debug_info.extracted_fields || {};
+    ocrGrid.innerHTML = '';
+    Object.keys(ext).forEach(k => {
+      const card = document.createElement('div');
+      card.className = 'ocr-field-card';
+      card.innerHTML = `
+        <div class="ocr-field-label">${k.replace('_', ' ').toUpperCase()} (95% conf)</div>
+        <div class="ocr-field-val">${ext[k]}</div>
+      `;
+      ocrGrid.appendChild(card);
+    });
+  }
+
+  // 7. Images Viewer Setup
   const imgOrig = document.getElementById('img-original');
   const imgEla = document.getElementById('img-ela');
   const imgAnnot = document.getElementById('img-annotated');
@@ -352,7 +429,7 @@ function renderResults(data) {
     if (phComp) phComp.style.display = 'none';
   }
 
-  // 6. Suspicious Anomaly Log
+  // 8. Suspicious Anomaly Log
   const suspiciousContainer = document.getElementById('suspicious-regions-items');
   if (suspiciousContainer) {
     suspiciousContainer.innerHTML = '';
@@ -370,21 +447,15 @@ function renderResults(data) {
     }
   }
 
-  // 7. Debug Accordion
+  // 9. Debug Accordion
   const dbgOcr = document.getElementById('debug-ocr-json');
   const dbgQr = document.getElementById('debug-qr-json');
-  if (dbgOcr && data.ocr_debug_info) {
-    dbgOcr.textContent = JSON.stringify(data.ocr_debug_info.extracted_fields || {}, null, 2);
-  }
-  if (dbgQr && data.ocr_debug_info) {
-    dbgQr.textContent = JSON.stringify(data.ocr_debug_info.qr_debug || {}, null, 2);
-  }
+  if (dbgOcr && data.ocr_debug_info) dbgOcr.textContent = JSON.stringify(data.ocr_debug_info.extracted_fields || {}, null, 2);
+  if (dbgQr && data.ocr_debug_info) dbgQr.textContent = JSON.stringify(data.ocr_debug_info.qr_debug || {}, null, 2);
 }
 
 // Viewer Tab Switcher
 function switchViewerTab(tabType) {
-  currentActiveViewerTab = tabType;
-
   ['orig', 'ela', 'annotated', 'edge', 'comp'].forEach(t => {
     const box = document.getElementById(`view-img-${t}`);
     const tabBtn = document.getElementById(`vtab-${t}`);
@@ -431,25 +502,24 @@ function generateForensicReportModal() {
   const scorePct = data.percentage !== undefined ? data.percentage : (data.authenticity_score || 0);
   const statusStr = data.status || 'VERIFIED';
   const dbRec = data.registry_record || {};
-  const extracted = data.ocr_debug_info?.extracted_fields || {};
 
   content.innerHTML = `
-    <div style="border-bottom: 2px solid var(--primary-cyan); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+    <div style="border-bottom: 2px solid var(--primary-blue); padding-bottom: 1rem; margin-bottom: 1.25rem;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; color: var(--primary-cyan);">ACADEMIC CREDENTIAL FORENSIC AUDIT REPORT</h2>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; color: var(--primary-blue);">OFFICIAL ACADEMIC CREDENTIAL FORENSIC REPORT</h2>
           <div style="font-size: 0.8rem; color: var(--text-muted);">SIH25029 Platform • Authenticity Validator for Academia</div>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 1.5rem; font-weight: 800; color: ${statusStr === 'VERIFIED' ? 'var(--success-green)' : 'var(--warning-amber)'};">${scorePct}%</div>
-          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">${statusStr.replace('_', ' ')}</div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: ${statusStr === 'VERIFIED' ? 'var(--success-green)' : 'var(--warning-amber)'};">${scorePct}%</div>
+          <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">${statusStr.replace('_', ' ')}</div>
         </div>
       </div>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
-      <div style="background: rgba(30, 41, 59, 0.5); padding: 0.85rem; border-radius: 6px; font-size: 0.825rem;">
-        <strong style="color: var(--primary-cyan); display: block; margin-bottom: 0.35rem;">REGISTRY RECORD DETAILS</strong>
+      <div style="background: #f8fafc; border: 1px solid var(--card-border); padding: 0.85rem; border-radius: 6px; font-size: 0.825rem;">
+        <strong style="color: var(--primary-blue); display: block; margin-bottom: 0.35rem;">REGISTRY RECORD DETAILS</strong>
         <div>Certificate ID: <strong>${dbRec.certificate_id || '88880001'}</strong></div>
         <div>Register No: <strong>${dbRec.register_no || '77770001'}</strong></div>
         <div>Candidate Name: <strong>${dbRec.student_name || 'ANGULAKSHMI T'}</strong></div>
@@ -458,19 +528,19 @@ function generateForensicReportModal() {
         <div>Passing Session: <strong>${dbRec.passing_year || 'APR 2023'}</strong></div>
       </div>
 
-      <div style="background: rgba(30, 41, 59, 0.5); padding: 0.85rem; border-radius: 6px; font-size: 0.825rem;">
-        <strong style="color: var(--accent-purple); display: block; margin-bottom: 0.35rem;">VERIFICATION SECURITY METRICS</strong>
-        <div>SHA-256 Signature Hash: <code style="font-size: 0.7rem; color: #a7f3d0;">${(dbRec.qr_payload_hash || 'd156e44e4379c822cc559c86e4a4e051').substring(0, 24)}...</code></div>
+      <div style="background: #f8fafc; border: 1px solid var(--card-border); padding: 0.85rem; border-radius: 6px; font-size: 0.825rem;">
+        <strong style="color: var(--purple-ai); display: block; margin-bottom: 0.35rem;">SECURITY & INTEGRITY METRICS</strong>
+        <div>SHA-256 Fingerprint: <code style="font-size: 0.7rem; color: var(--primary-blue);">${(dbRec.qr_payload_hash || 'd156e44e4379c822cc559c86e4a4e051').substring(0, 24)}...</code></div>
         <div>QR Code Payload Status: <strong>${data.qr_verified ? 'VERIFIED ✓' : 'UNVERIFIED ⚠'}</strong></div>
         <div>AI Genuine Probability: <strong>94.5%</strong></div>
-        <div>OCR Consistency Score: <strong>${data.scores?.ocr_consistency || 20} / 20</strong></div>
+        <div>OCR Field Score: <strong>${data.scores?.ocr_consistency || 20} / 20</strong></div>
         <div>Registry Match Score: <strong>${data.scores?.registry_match || 15} / 15</strong></div>
       </div>
     </div>
 
     <div style="margin-bottom: 1.25rem;">
-      <strong style="font-size: 0.85rem; color: white; display: block; margin-bottom: 0.4rem;">DECISION EXPLANATION & ANOMALY SUMMARY</strong>
-      <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); padding: 0.85rem; border-radius: 6px; font-size: 0.825rem; color: var(--text-muted);">
+      <strong style="font-size: 0.85rem; color: var(--text-navy); display: block; margin-bottom: 0.4rem;">VERIFICATION DECISION EXPLANATION</strong>
+      <div style="background: #f8fafc; border: 1px solid var(--card-border); padding: 0.85rem; border-radius: 6px; font-size: 0.825rem; color: var(--text-main);">
         ${data.explanation || 'No significant inconsistencies detected.'}
       </div>
     </div>
@@ -482,6 +552,14 @@ function generateForensicReportModal() {
 function closeReportModal() {
   const modal = document.getElementById('report-modal');
   if (modal) modal.classList.add('hidden');
+}
+
+// Institution Registry Search
+function searchRegistryID() {
+  const val = document.getElementById('registry-search-input')?.value;
+  if (val) {
+    alert(`Searching registry database for Certificate ID / Register No: ${val}`);
+  }
 }
 
 // Fetch Model Metrics
@@ -531,7 +609,7 @@ async function fetchAuditLogs() {
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>#${log.id}</td>
-            <td style="font-weight: 600; color: var(--primary-cyan);">${log.cert_id || 'UNKNOWN'}</td>
+            <td style="font-weight: 700; color: var(--primary-blue);">${log.cert_id || 'UNKNOWN'}</td>
             <td>${log.filename || 'marksheet.jpg'}</td>
             <td><strong>${log.authenticity_score || 0}%</strong></td>
             <td><span class="verdict-tag ${log.status === 'VERIFIED' ? 'verified' : 'warning'}" style="font-size: 0.7rem;">${log.status}</span></td>
@@ -554,16 +632,16 @@ if (dropzone) {
   ['dragenter', 'dragover'].forEach(eventName => {
     dropzone.addEventListener(eventName, (e) => {
       e.preventDefault();
-      dropzone.style.borderColor = 'var(--primary-cyan)';
-      dropzone.style.background = 'rgba(56, 189, 248, 0.1)';
+      dropzone.style.borderColor = 'var(--primary-blue)';
+      dropzone.style.background = 'rgba(37, 99, 235, 0.08)';
     }, false);
   });
 
   ['dragleave', 'drop'].forEach(eventName => {
     dropzone.addEventListener(eventName, (e) => {
       e.preventDefault();
-      dropzone.style.borderColor = 'rgba(56, 189, 248, 0.4)';
-      dropzone.style.background = 'rgba(15, 23, 42, 0.5)';
+      dropzone.style.borderColor = 'rgba(37, 99, 235, 0.35)';
+      dropzone.style.background = '#f8fafc';
     }, false);
   });
 

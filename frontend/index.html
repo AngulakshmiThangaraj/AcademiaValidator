@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Authenticity Validator for Academia | SIH25029 Platform</title>
+  <title>Authenticity Validator for Academia | Enterprise Credential Platform</title>
   <!-- Google Fonts & Font Awesome Icons -->
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -17,126 +17,165 @@
         <i class="fa-solid fa-shield-halved"></i>
       </div>
       <div>
-        <div class="brand-title">Authenticity Validator</div>
-        <div class="brand-subtitle">AI-Powered Academic Document Forensic Platform</div>
+        <div class="brand-title">AUTHENTICITY VALIDATOR</div>
+        <div class="brand-subtitle">AI-Powered Academic Document Forensic & Verification Platform</div>
       </div>
     </div>
 
     <nav class="nav-links">
       <button class="nav-btn active" id="nav-home" onclick="switchTab('home')"><i class="fa-solid fa-house"></i> Home</button>
-      <button class="nav-btn" id="nav-verify" onclick="switchTab('verify')"><i class="fa-solid fa-file-shield"></i> Verify Document</button>
+      <button class="nav-btn" id="nav-verify" onclick="switchTab('verify')"><i class="fa-solid fa-file-circle-check"></i> Verify</button>
+      <button class="nav-btn" id="nav-roles" onclick="switchTab('roles')"><i class="fa-solid fa-users-gear"></i> Roles</button>
       <button class="nav-btn" id="nav-how" onclick="switchTab('how')"><i class="fa-solid fa-diagram-project"></i> How It Works</button>
       <button class="nav-btn" id="nav-security" onclick="switchTab('security')"><i class="fa-solid fa-lock"></i> Security</button>
       <button class="nav-btn" id="nav-model" onclick="switchTab('model')"><i class="fa-solid fa-brain"></i> Model</button>
-      <button class="nav-btn" id="nav-dashboard" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard</button>
+      <button class="nav-btn" id="nav-dashboard" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
       <button class="nav-btn" id="nav-about" onclick="switchTab('about')"><i class="fa-solid fa-circle-info"></i> About</button>
     </nav>
+
+    <div class="nav-actions">
+      <button class="btn-nav-login" onclick="openLoginModal()"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+      <button class="btn-nav-cta" onclick="switchTab('verify')"><i class="fa-solid fa-shield-check"></i> Verify Document</button>
+    </div>
   </header>
 
   <main class="container">
 
     <!-- =================================================================== -->
-    <!-- 1. HOME VIEW (LANDING PAGE)                                        -->
+    <!-- 1. HOME VIEW (ENTERPRISE LANDING PAGE)                             -->
     <!-- =================================================================== -->
     <div id="view-home" class="tab-view">
       
-      <!-- Hero Section -->
       <section class="hero-landing">
-        <div class="hero-landing-badge">
-          <i class="fa-solid fa-award"></i> SIH25029 Flagship Verification System
-        </div>
-        <h1 class="hero-landing-title">AI-Powered Academic Document Forensic & Verification Platform</h1>
-        <p class="hero-landing-subtitle">
-          Detect document tamperings, font baseline anomalies, image edits, and unverified credentials in physical, scanned, or photographed marksheets.
-        </p>
+        <div class="hero-text-box">
+          <div class="hero-badge">
+            <i class="fa-solid fa-shield-halved"></i> Enterprise Academic Security Layer
+          </div>
+          <h1 class="hero-landing-title">AI-Powered Academic Document Forensic & Verification Platform</h1>
+          <p class="hero-landing-subtitle">
+            Verify academic documents using AI, OCR, document forensics, credential validation, and tamper-evident fingerprinting.
+          </p>
 
-        <!-- Official Positioning Callout Box -->
-        <div class="positioning-callout">
-          <div class="callout-icon"><i class="fa-solid fa-quote-left"></i></div>
-          <div class="callout-text">
-            “An AI-powered forensic verification layer that complements existing academic credential systems by analysing physical, scanned, photographed, or potentially manipulated academic documents.”
+          <!-- SIH Positioning Statement Callout Box -->
+          <div class="positioning-callout">
+            <div class="callout-icon"><i class="fa-solid fa-quote-left"></i></div>
+            <div class="callout-text">
+              “An AI-powered forensic verification layer that complements existing academic credential systems by analysing physical, scanned, photographed, or potentially manipulated academic documents.”
+            </div>
+          </div>
+
+          <div class="hero-cta-group">
+            <button class="btn-cta btn-cta-primary" onclick="switchTab('verify')">
+              <i class="fa-solid fa-file-circle-check"></i> VERIFY DOCUMENT
+            </button>
+            <button class="btn-cta btn-cta-secondary" onclick="switchTab('how')">
+              <i class="fa-solid fa-play"></i> HOW IT WORKS
+            </button>
           </div>
         </div>
 
-        <div class="hero-cta-group">
-          <button class="btn-cta btn-cta-primary" onclick="switchTab('verify')">
-            <i class="fa-solid fa-file-circle-check"></i> Verify Academic Document
-          </button>
-          <button class="btn-cta btn-cta-secondary" onclick="switchTab('how')">
-            <i class="fa-solid fa-play"></i> How It Works
-          </button>
+        <!-- Graphic Certificate Illustration Badge -->
+        <div class="hero-illustration-box">
+          <div class="cert-graphic-card">
+            <div class="graphic-cert-header">
+              <i class="fa-solid fa-graduation-cap"></i> OFFICIAL ACADEMIC TRANSCRIPT
+            </div>
+            <div class="graphic-cert-body">
+              <div class="graphic-line long"></div>
+              <div class="graphic-line med"></div>
+              <div class="graphic-line short"></div>
+              <div class="graphic-stamp"><i class="fa-solid fa-stamp"></i> VERIFIED</div>
+            </div>
+            <div class="graphic-cert-footer">
+              <div class="graphic-qr"><i class="fa-solid fa-qrcode"></i></div>
+              <div class="graphic-hash">SHA-256: A8F92C7D21...</div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- Key Capabilities Grid -->
+      <!-- 4 Core Feature Cards -->
       <section class="section-block">
         <div class="section-title-box">
-          <h2><i class="fa-solid fa-layer-group"></i> Multi-Layered Forensic Architecture</h2>
-          <p>Combines machine learning, computer vision, document OCR, and cryptographic registry lookups</p>
+          <h2><i class="fa-solid fa-layer-group"></i> Multi-Layer Forensic Capabilities</h2>
+          <p>Four independent verification layers working together to audit academic documents</p>
         </div>
 
         <div class="features-grid">
           <div class="feature-card">
-            <div class="feature-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--primary-cyan);">
-              <i class="fa-solid fa-language"></i>
-            </div>
-            <h3>Multilingual OCR Extraction</h3>
-            <p>Engineered for Indian academic documents with Tamil + English bilingual OCR extraction, numeric field normalization, and field-level confidence scores.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon" style="background: rgba(129, 140, 248, 0.15); color: var(--accent-purple);">
+            <div class="feature-icon feature-purple">
               <i class="fa-solid fa-brain"></i>
             </div>
-            <h3>MobileNetV2 AI Classifier</h3>
-            <p>PyTorch deep learning vision backbone trained to detect forgery artifacts, spliced text regions, seal distortions, and synthetic mark modifications.</p>
+            <h3>AI Forensics</h3>
+            <p>PyTorch MobileNetV2 classifier trained to identify document forgery patterns, spliced text regions, and seal alterations.</p>
           </div>
 
           <div class="feature-card">
-            <div class="feature-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--warning-amber);">
-              <i class="fa-solid fa-eye"></i>
+            <div class="feature-icon feature-blue">
+              <i class="fa-solid fa-language"></i>
             </div>
-            <h3>Error Level Analysis (ELA)</h3>
-            <p>High-resolution ELA compression heatmaps highlight digital pixel re-saving differences, altered marks, font inconsistencies, and suspicious bounding boxes.</p>
+            <h3>Multilingual OCR</h3>
+            <p>Tamil + English OCR engine with layout analysis, candidate name parsing, register number matching, and field confidence metrics.</p>
           </div>
 
           <div class="feature-card">
-            <div class="feature-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--success-green);">
-              <i class="fa-solid fa-qrcode"></i>
+            <div class="feature-icon feature-green">
+              <i class="fa-solid fa-award"></i>
             </div>
-            <h3>Cryptographic QR & SHA-256</h3>
-            <p>Decodes embedded QR code signatures, compares SHA-256 document fingerprints, and validates against official board registry databases.</p>
+            <h3>Credential Verification</h3>
+            <p>Cross-references extracted candidate details against official board registry databases and computes SHA-256 cryptographic hashes.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon feature-cyan">
+              <i class="fa-solid fa-shield-virus"></i>
+            </div>
+            <h3>Document Security</h3>
+            <p>Error Level Analysis (ELA) compression heatmaps, edge contrast filters, and bounding box visualization of tampered areas.</p>
           </div>
         </div>
       </section>
 
-      <!-- Target Stakeholders Section -->
+      <!-- 4-Step Verification Workflow -->
       <section class="section-block">
         <div class="section-title-box">
-          <h2><i class="fa-solid fa-building-columns"></i> Designed For Verification Authorities</h2>
-          <p>Empowering institutions with instant zero-trust credential verification</p>
+          <h2><i class="fa-solid fa-diagram-project"></i> Simple 4-Step Verification Workflow</h2>
+          <p>Fast, automated verification pipeline for admissions, HR, and credential authorities</p>
         </div>
 
-        <div class="use-cases-grid">
-          <div class="use-case-card">
-            <i class="fa-solid fa-graduation-cap"></i>
-            <h4>Universities & Colleges</h4>
-            <p>Verify incoming applicant marksheets and transcripts during admission cycles.</p>
+        <div class="workflow-grid-4">
+          <div class="wf-card">
+            <div class="wf-step-tag">01</div>
+            <div class="wf-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+            <h3>UPLOAD</h3>
+            <p>Upload physical certificate scan or photo (PDF, JPG, PNG, WEBP)</p>
           </div>
-          <div class="use-case-card">
-            <i class="fa-solid fa-briefcase"></i>
-            <h4>Corporate Recruiters</h4>
-            <p>Validate background educational credentials of prospective hires in seconds.</p>
+
+          <div class="wf-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+
+          <div class="wf-card">
+            <div class="wf-step-tag">02</div>
+            <div class="wf-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <h3>ANALYZE</h3>
+            <p>Bilingual OCR + MobileNetV2 AI + ELA compression heatmap analysis</p>
           </div>
-          <div class="use-case-card">
-            <i class="fa-solid fa-hand-holding-dollar"></i>
-            <h4>Scholarship Agencies</h4>
-            <p>Prevent fraudulent merit claims by verifying authentic state board marksheets.</p>
+
+          <div class="wf-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+
+          <div class="wf-card">
+            <div class="wf-step-tag">03</div>
+            <div class="wf-icon"><i class="fa-solid fa-database"></i></div>
+            <h3>VERIFY</h3>
+            <p>Decode QR payload, match board registry data, check SHA-256 hash</p>
           </div>
-          <div class="use-case-card">
-            <i class="fa-solid fa-landmark"></i>
-            <h4>Government Bodies</h4>
-            <p>Complement DigiLocker/NAD with a forensic analysis layer for physical copies.</p>
+
+          <div class="wf-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+
+          <div class="wf-card">
+            <div class="wf-step-tag">04</div>
+            <div class="wf-icon"><i class="fa-solid fa-file-pdf"></i></div>
+            <h3>REPORT</h3>
+            <p>100-Point score badge, field comparison table, and downloadable PDF report</p>
           </div>
         </div>
       </section>
@@ -144,19 +183,172 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 2. VERIFY DOCUMENT WORKSPACE VIEW                                  -->
+    <!-- 2. ROLE SELECTION VIEW                                             -->
+    <!-- =================================================================== -->
+    <div id="view-roles" class="tab-view hidden">
+      <div class="section-title-box text-center">
+        <h2><i class="fa-solid fa-users-gear"></i> Select Your Platform Role</h2>
+        <p>Tailored interfaces for candidates, educational institutions, verification agencies, and administrators</p>
+      </div>
+
+      <div class="roles-grid">
+        <div class="role-card" onclick="selectRole('student')">
+          <div class="role-icon role-blue"><i class="fa-solid fa-user-graduate"></i></div>
+          <h3>STUDENT</h3>
+          <p>Upload and verify your academic certificates and marksheets before submitting to employers or universities.</p>
+          <button class="btn-role-select">Enter Student Portal <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+
+        <div class="role-card" onclick="selectRole('institution')">
+          <div class="role-icon role-purple"><i class="fa-solid fa-building-columns"></i></div>
+          <h3>INSTITUTION</h3>
+          <p>Issue, register, and manage authentic academic credentials and SHA-256 document fingerprints.</p>
+          <button class="btn-role-select">Enter Institution Portal <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+
+        <div class="role-card" onclick="selectRole('verifier')">
+          <div class="role-icon role-green"><i class="fa-solid fa-user-shield"></i></div>
+          <h3>VERIFIER</h3>
+          <p>Verify submitted academic documents, audit candidate marks, inspect ELA heatmaps, and download report PDFs.</p>
+          <button class="btn-role-select">Enter Verifier Workspace <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+
+        <div class="role-card" onclick="selectRole('admin')">
+          <div class="role-icon role-dark"><i class="fa-solid fa-sliders"></i></div>
+          <h3>ADMIN</h3>
+          <p>Monitor system-wide verification activity, audit logs, model performance, and security thresholds.</p>
+          <button class="btn-role-select">Enter Admin Dashboard <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 3. STUDENT DASHBOARD VIEW                                          -->
+    <!-- =================================================================== -->
+    <div id="view-student" class="tab-view hidden">
+      <div class="user-welcome-card">
+        <div>
+          <h2>Welcome, Student</h2>
+          <p>Upload and verify your academic certificate authenticity in seconds.</p>
+        </div>
+        <button class="btn-cta btn-cta-primary" onclick="switchTab('verify')">
+          <i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD CERTIFICATE
+        </button>
+      </div>
+
+      <div class="metrics-grid" style="margin-bottom: 1.5rem;">
+        <div class="metric-card">
+          <div class="metric-value" style="color: var(--primary-blue);">3</div>
+          <div class="metric-label">Total Uploaded Documents</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" style="color: var(--success-green);">3</div>
+          <div class="metric-label">Verified Genuine</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" style="color: var(--warning-amber);">0</div>
+          <div class="metric-label">Suspicious / Pending</div>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> My Recent Verifications</div>
+        <table class="discrepancy-table">
+          <thead>
+            <tr>
+              <th>Document Name</th>
+              <th>Certificate ID</th>
+              <th>Date Uploaded</th>
+              <th>Status</th>
+              <th>Authenticity Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>TN_SSLC_Marksheet_2023.jpg</strong></td>
+              <td>88880001</td>
+              <td>Today, 14:20</td>
+              <td><span class="verdict-tag verified" style="font-size: 0.75rem;">VERIFIED</span></td>
+              <td><strong style="color: var(--success-green);">100%</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 4. INSTITUTION DASHBOARD VIEW                                      -->
+    <!-- =================================================================== -->
+    <div id="view-institution" class="tab-view hidden">
+      <div class="section-title-box">
+        <h2><i class="fa-solid fa-building-columns"></i> Institution Credential Registry</h2>
+        <p>Manage registered academic records and document SHA-256 fingerprints</p>
+      </div>
+
+      <div class="glass-card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; gap: 0.5rem; flex: 1; max-width: 400px;">
+            <input type="text" id="registry-search-input" placeholder="Search Certificate ID or Register No..." class="input-search">
+            <button class="btn-nav-cta" onclick="searchRegistryID()"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+          </div>
+          <div>
+            <button class="btn-demo btn-demo-genuine" onclick="alert('Credential Registration Tool: Enter candidate details to register new document.')"><i class="fa-solid fa-plus"></i> Register New Certificate</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title"><i class="fa-solid fa-table"></i> Official Board Registry Table</div>
+        <table class="discrepancy-table" style="margin-top: 1rem;">
+          <thead>
+            <tr>
+              <th>Certificate ID</th>
+              <th>Register No</th>
+              <th>Candidate Name</th>
+              <th>Course / Exam</th>
+              <th>Total Marks</th>
+              <th>Session</th>
+              <th>SHA-256 Hash</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong style="color: var(--primary-blue);">88880001</strong></td>
+              <td>77770001</td>
+              <td>ANGULAKSHMI T</td>
+              <td>SSLC (Class X)</td>
+              <td>451 / 500</td>
+              <td>APR 2023</td>
+              <td><code style="font-size: 0.7rem; color: var(--purple-ai);">d156e44e4379c822cc559c86...</code></td>
+            </tr>
+            <tr>
+              <td><strong style="color: var(--primary-blue);">CERT-2025-1001</strong></td>
+              <td>3122211001</td>
+              <td>Rohan Verma</td>
+              <td>B.Tech Computer Science</td>
+              <td>8.75 CGPA</td>
+              <td>MAY 2024</td>
+              <td><code style="font-size: 0.7rem; color: var(--purple-ai);">a8f5f167f44f4964e6c998de...</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 5. VERIFIER WORKSPACE VIEW (MAIN WORKFLOW)                         -->
     <!-- =================================================================== -->
     <div id="view-verify" class="tab-view hidden">
       
-      <!-- SIH Demo Mode Banner -->
+      <!-- SIH Demo Mode Control Panel -->
       <div class="demo-mode-panel">
         <div class="demo-panel-header">
           <span class="demo-tag"><i class="fa-solid fa-flask"></i> SIH Demo Mode</span>
-          <span class="demo-sub">Select a pre-loaded sample document below to test the end-to-end verification pipeline:</span>
+          <span class="demo-sub">Select pre-loaded sample certificates to test the end-to-end verification pipeline:</span>
         </div>
         <div class="demo-buttons-group">
           <button class="btn-demo btn-demo-genuine" onclick="runPresetDemo('tn_sslc_genuine')">
-            <i class="fa-solid fa-circle-check"></i> Sample 1: Genuine Academic Certificate
+            <i class="fa-solid fa-circle-check"></i> Sample 1: Genuine Certificate
           </button>
           <button class="btn-demo btn-demo-tampered" onclick="runPresetDemo('tn_sslc_manipulated')">
             <i class="fa-solid fa-triangle-exclamation"></i> Sample 2: Manipulated Certificate
@@ -169,10 +361,9 @@
         <!-- Left Column: Upload & Control Panel -->
         <div class="col-left">
           
-          <!-- Dropzone Upload Card -->
           <div class="glass-card">
             <div class="card-title">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Upload Academic Certificate / Marksheet
+              <i class="fa-solid fa-cloud-arrow-up"></i> VERIFY ACADEMIC DOCUMENT
             </div>
             
             <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
@@ -180,53 +371,51 @@
               <div class="dropzone-icon">
                 <i class="fa-solid fa-file-arrow-up"></i>
               </div>
-              <div class="dropzone-text" id="dropzone-main-text">Drag & drop certificate/marksheet image here or click to browse</div>
-              <div class="dropzone-sub">Supported Formats: PDF, JPG, JPEG, PNG, WEBP (Max File Size: 16 MB)</div>
+              <div class="dropzone-text" id="dropzone-main-text">Drag & Drop Certificate or Click to Browse</div>
+              <div class="dropzone-sub">Supported: PDF, JPG, JPEG, PNG, WEBP (Max File Size: 16 MB)</div>
               <input type="file" id="file-input" accept="image/*,.pdf" class="hidden" onchange="handleFileSelect(event)">
             </div>
 
-            <!-- Upload File Selected Preview Bar -->
+            <!-- File Selected Preview Bar -->
             <div class="file-selected-bar hidden" id="file-selected-bar">
               <div class="file-info-text">
-                <i class="fa-solid fa-file-image" style="color: var(--primary-cyan);"></i>
+                <i class="fa-solid fa-file-image" style="color: var(--primary-blue);"></i>
                 <span id="selected-filename">sample_marksheet.jpg</span>
                 <span class="file-size-tag" id="selected-filesize">1.2 MB</span>
               </div>
               <button class="btn-clear-file" onclick="clearSelectedFile()"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- Start Verification Trigger -->
             <button class="btn-start-verify" id="btn-start-verify" onclick="triggerManualUploadVerification()">
               <i class="fa-solid fa-wand-magic-sparkles"></i> START VERIFICATION
             </button>
 
-            <!-- 9-Step Animated Verification Pipeline -->
+            <!-- 8-Step Verification Timeline -->
             <div class="pipeline-card" style="margin-top: 1.25rem;">
-              <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                <i class="fa-solid fa-gears"></i> Verification Pipeline Execution
+              <div class="pipeline-header-title">
+                <i class="fa-solid fa-gears"></i> LIVE VERIFICATION PIPELINE
               </div>
 
-              <div class="pipeline-grid">
-                <div class="pipeline-node" id="pstep-1"><span class="step-num">1</span> Preprocessing</div>
-                <div class="pipeline-node" id="pstep-2"><span class="step-num">2</span> Tamil/Eng OCR</div>
-                <div class="pipeline-node" id="pstep-3"><span class="step-num">3</span> AI Forgery Model</div>
-                <div class="pipeline-node" id="pstep-4"><span class="step-num">4</span> ELA Forensics</div>
-                <div class="pipeline-node" id="pstep-5"><span class="step-num">5</span> QR Verification</div>
-                <div class="pipeline-node" id="pstep-6"><span class="step-num">6</span> Registry Match</div>
-                <div class="pipeline-node" id="pstep-7"><span class="step-num">7</span> SHA-256 Hash</div>
-                <div class="pipeline-node" id="pstep-8"><span class="step-num">8</span> Factor Score</div>
-                <div class="pipeline-node" id="pstep-9"><span class="step-num">9</span> Final Verdict</div>
+              <div class="pipeline-timeline">
+                <div class="timeline-step" id="pstep-1"><span class="t-num">1</span> 1. Preprocessing</div>
+                <div class="timeline-step" id="pstep-2"><span class="t-num">2</span> 2. Multilingual OCR</div>
+                <div class="timeline-step" id="pstep-3"><span class="t-num">3</span> 3. AI Forgery Model</div>
+                <div class="timeline-step" id="pstep-4"><span class="t-num">4</span> 4. Forensic Analysis</div>
+                <div class="timeline-step" id="pstep-5"><span class="t-num">5</span> 5. QR Verification</div>
+                <div class="timeline-step" id="pstep-6"><span class="t-num">6</span> 6. Registry Matching</div>
+                <div class="timeline-step" id="pstep-7"><span class="t-num">7</span> 7. SHA-256 Fingerprint</div>
+                <div class="timeline-step" id="pstep-8"><span class="t-num">8</span> 8. Authenticity Score</div>
               </div>
             </div>
 
           </div>
 
-          <!-- Overall Verdict & Score Card -->
+          <!-- Overall Authenticity Score & Verdict Card -->
           <div class="glass-card" id="results-score-card">
             <div class="card-title" style="justify-content: space-between;">
-              <span><i class="fa-solid fa-chart-line"></i> Multi-Factor Authenticity Score</span>
+              <span><i class="fa-solid fa-chart-line"></i> AUTHENTICITY SCORE</span>
               <button class="btn-report-action hidden" id="btn-open-report" onclick="generateForensicReportModal()">
-                <i class="fa-solid fa-file-pdf"></i> Generate Forensic Report
+                <i class="fa-solid fa-file-pdf"></i> DOWNLOAD FORENSIC REPORT
               </button>
             </div>
             
@@ -236,14 +425,14 @@
                   <div class="score-circle-inner" id="score-value">--%</div>
                 </div>
                 <div class="verdict-box">
-                  <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">AUTHENTICITY VERDICT</span>
+                  <span class="verdict-label">FINAL VERDICT</span>
                   <div class="verdict-tag ready" id="verdict-tag">READY FOR SCAN</div>
-                  <span style="font-size: 0.75rem; color: var(--text-dim);" id="hash-match-status">SHA-256 Document Integrity Check</span>
+                  <span class="hash-match-status" id="hash-match-status">SHA-256 Document Integrity Check</span>
                 </div>
               </div>
             </div>
 
-            <!-- Score Breakdown Factors -->
+            <!-- Factor Breakdown Bars -->
             <div class="breakdown-list">
               <div class="breakdown-item">
                 <div class="breakdown-meta">
@@ -251,7 +440,7 @@
                   <span id="score-ocr">-- / 20.0</span>
                 </div>
                 <div class="progress-bar-bg">
-                  <div class="progress-bar-fill" id="bar-ocr" style="width: 0%; background: var(--primary-cyan);"></div>
+                  <div class="progress-bar-fill" id="bar-ocr" style="width: 0%; background: var(--accent-cyan);"></div>
                 </div>
               </div>
 
@@ -261,7 +450,7 @@
                   <span id="score-registry">-- / 15.0</span>
                 </div>
                 <div class="progress-bar-bg">
-                  <div class="progress-bar-fill" id="bar-registry" style="width: 0%; background: var(--accent-purple);"></div>
+                  <div class="progress-bar-fill" id="bar-registry" style="width: 0%; background: var(--primary-blue);"></div>
                 </div>
               </div>
 
@@ -291,38 +480,36 @@
                   <span id="score-ai">-- / 20.0</span>
                 </div>
                 <div class="progress-bar-bg">
-                  <div class="progress-bar-fill" id="bar-ai" style="width: 0%; background: #ec4899;"></div>
+                  <div class="progress-bar-fill" id="bar-ai" style="width: 0%; background: var(--purple-ai);"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Explainable Summary Report Box -->
+            <!-- Explainable Decision Report Box -->
             <div class="report-box" id="explainable-report-box">
-              <div style="font-weight: 600; margin-bottom: 0.35rem; color: white;">
-                <i class="fa-solid fa-circle-info"></i> Explainable Decision Summary
+              <div style="font-weight: 700; margin-bottom: 0.35rem; color: var(--text-navy);">
+                <i class="fa-solid fa-circle-info"></i> VERIFICATION SUMMARY
               </div>
-              <div id="report-text">Select a sample document above or upload an academic credential to generate forensic findings.</div>
+              <div id="report-text">Upload an academic document above or click a SIH Demo sample button to run the verification engine.</div>
             </div>
           </div>
 
           <!-- Matched Fields & Discrepancies Table Card -->
           <div class="glass-card hidden" id="fields-verification-card">
             <div class="card-title">
-              <i class="fa-solid fa-list-check"></i> Field Matching & Registry Comparison
+              <i class="fa-solid fa-list-check"></i> FIELD DISCREPANCY ANALYSIS
             </div>
             
             <div style="margin-bottom: 1rem;">
-              <div style="font-size: 0.85rem; font-weight: 600; color: var(--success-green); margin-bottom: 0.5rem;">
-                <i class="fa-solid fa-circle-check"></i> Verified Matching Fields
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--success-green); margin-bottom: 0.5rem;">
+                <i class="fa-solid fa-circle-check"></i> Verified Matched Fields
               </div>
-              <div class="matched-chips-container" id="matched-chips">
-                <!-- Chips rendered dynamically -->
-              </div>
+              <div class="matched-chips-container" id="matched-chips"></div>
             </div>
 
             <div id="discrepancies-section" class="hidden">
-              <div style="font-size: 0.85rem; font-weight: 600; color: var(--danger-red); margin-bottom: 0.5rem;">
-                <i class="fa-solid fa-triangle-exclamation"></i> Discrepancies Detected
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--danger-red); margin-bottom: 0.5rem;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Discrepancies & Anomalies
               </div>
               <table class="discrepancy-table">
                 <thead>
@@ -330,12 +517,10 @@
                     <th>Field</th>
                     <th>Extracted (OCR)</th>
                     <th>Registry Value</th>
-                    <th>Reason</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
-                <tbody id="discrepancy-rows">
-                  <!-- Rows rendered dynamically -->
-                </tbody>
+                <tbody id="discrepancy-rows"></tbody>
               </table>
             </div>
           </div>
@@ -345,9 +530,31 @@
         <!-- Right Column: Document Inspection & Forensics -->
         <div class="col-right">
           
+          <!-- AI & Security Quick Cards Grid -->
+          <div class="security-cards-row">
+            <div class="mini-sec-card">
+              <div class="mini-sec-title"><i class="fa-solid fa-brain" style="color: var(--purple-ai);"></i> AI FORENSIC RESULT</div>
+              <div class="mini-sec-val" id="ai-risk-val">GENUINE 94.5%</div>
+              <div class="mini-sec-sub" id="ai-risk-sub">Classification: LOW RISK</div>
+            </div>
+
+            <div class="mini-sec-card">
+              <div class="mini-sec-title"><i class="fa-solid fa-qrcode" style="color: var(--success-green);"></i> QR VERIFICATION</div>
+              <div class="mini-sec-val" id="qr-status-val">QR DETECTED ✓</div>
+              <div class="mini-sec-sub" id="qr-status-sub">Credential Status: VERIFIED</div>
+            </div>
+
+            <div class="mini-sec-card">
+              <div class="mini-sec-title"><i class="fa-solid fa-fingerprint" style="color: var(--primary-blue);"></i> SHA-256 INTEGRITY</div>
+              <div class="mini-sec-val" id="hash-status-val">HASH MATCHED ✓</div>
+              <div class="mini-sec-sub" id="hash-code-sub">Tamper-Evident Fingerprint</div>
+            </div>
+          </div>
+
+          <!-- Document Viewer Card -->
           <div class="glass-card">
             <div class="card-title" style="justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
-              <span><i class="fa-solid fa-eye"></i> Forensic Document Inspection</span>
+              <span><i class="fa-solid fa-eye"></i> FORENSIC DOCUMENT VIEWER</span>
               
               <div class="viewer-tabs">
                 <button class="viewer-tab active" id="vtab-orig" onclick="switchViewerTab('orig')">Original</button>
@@ -361,7 +568,7 @@
             <div class="image-viewer-container">
               <div class="image-box active" id="view-img-orig">
                 <img id="img-original" src="" alt="Original Document Preview">
-                <div class="img-placeholder-text" id="ph-orig"><i class="fa-solid fa-file-image" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>Upload a document to inspect original image</div>
+                <div class="img-placeholder-text" id="ph-orig"><i class="fa-solid fa-file-image" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>Upload a document to view original image</div>
               </div>
               <div class="image-box" id="view-img-ela">
                 <img id="img-ela" src="" alt="ELA Forensic Heatmap">
@@ -373,37 +580,48 @@
               </div>
               <div class="image-box" id="view-img-edge">
                 <img id="img-edge" src="" alt="Edge Analysis Filter">
-                <div class="img-placeholder-text" id="ph-edge"><i class="fa-solid fa-border-top-left" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>High-pass edge font analysis layer</div>
+                <div class="img-placeholder-text" id="ph-edge"><i class="fa-solid fa-border-top-left" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>High-pass edge font analysis filter</div>
               </div>
               <div class="image-box" id="view-img-comp">
-                <img id="img-comp" src="" alt="Compression Difference Map">
-                <div class="img-placeholder-text" id="ph-comp"><i class="fa-solid fa-chart-area" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>JPEG quantization matrix analysis</div>
+                <img id="img-comp" src="" alt="Compression Map">
+                <div class="img-placeholder-text" id="ph-comp"><i class="fa-solid fa-chart-area" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>Quantization matrix map</div>
               </div>
             </div>
 
-            <!-- Suspicious Regions Anomaly Log -->
+            <!-- Suspicious Region Visualization Log -->
             <div class="suspicious-list" id="suspicious-list-container">
-              <div style="font-weight: 600; font-size: 0.85rem; color: var(--warning-amber); margin-bottom: 0.5rem;">
-                <i class="fa-solid fa-shield-virus"></i> Forensic Anomaly & Font Inconsistency Log
+              <div style="font-weight: 700; font-size: 0.85rem; color: var(--danger-red); margin-bottom: 0.5rem;">
+                <i class="fa-solid fa-shield-virus"></i> SUSPICIOUS REGION ANOMALY LOG
               </div>
               <div id="suspicious-regions-items">
-                <div style="font-size: 0.8rem; color: var(--text-dim);">No document scanned yet.</div>
+                <div style="font-size: 0.8rem; color: var(--text-dim);">No file scanned yet.</div>
               </div>
             </div>
 
-            <!-- Expandable OCR & QR Debug Accordion -->
+            <!-- OCR Result Panel & Confidence -->
+            <div class="ocr-result-panel" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <strong style="font-size: 0.85rem; color: var(--text-navy);"><i class="fa-solid fa-language"></i> MULTILINGUAL OCR RESULT</strong>
+                <span class="lang-badges"><span class="badge-lang">Tamil ✓</span> <span class="badge-lang">English ✓</span></span>
+              </div>
+              <div id="ocr-extracted-cards" class="ocr-cards-grid">
+                <div style="font-size: 0.8rem; color: var(--text-dim);">Extracted OCR fields with confidence metrics will appear here.</div>
+              </div>
+            </div>
+
+            <!-- Debug Accordion -->
             <div class="debug-accordion">
               <button class="debug-toggle-btn" onclick="toggleDebugAccordion()">
-                <span><i class="fa-solid fa-code"></i> Multilingual OCR & Cryptographic QR Technical Debug</span>
+                <span><i class="fa-solid fa-code"></i> Technical OCR & QR Debug Accordion</span>
                 <i class="fa-solid fa-chevron-down" id="accordion-icon"></i>
               </button>
               <div class="debug-content hidden" id="debug-content-body">
                 <div style="margin-bottom: 0.75rem;">
-                  <div style="font-size: 0.75rem; color: var(--primary-cyan); font-weight: 600; margin-bottom: 0.25rem;">EXTRACTED OCR FIELDS WITH CONFIDENCE SCORES</div>
+                  <div style="font-size: 0.75rem; color: var(--primary-blue); font-weight: 700; margin-bottom: 0.25rem;">EXTRACTED OCR FIELDS (JSON)</div>
                   <pre id="debug-ocr-json" class="debug-json-box">-- No OCR data --</pre>
                 </div>
                 <div>
-                  <div style="font-size: 0.75rem; color: var(--accent-purple); font-weight: 600; margin-bottom: 0.25rem;">DECODED QR PAYLOAD & SHA-256 SIGNATURE HASH</div>
+                  <div style="font-size: 0.75rem; color: var(--purple-ai); font-weight: 700; margin-bottom: 0.25rem;">QR PAYLOAD & SHA-256 HASH</div>
                   <pre id="debug-qr-json" class="debug-json-box">-- No QR payload --</pre>
                 </div>
               </div>
@@ -418,133 +636,90 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 3. HOW IT WORKS VIEW                                              -->
+    <!-- 6. HOW IT WORKS VIEW                                              -->
     <!-- =================================================================== -->
     <div id="view-how" class="tab-view hidden">
       <div class="section-title-box">
-        <h2><i class="fa-solid fa-diagram-project"></i> 9-Stage Forensic Verification Workflow</h2>
-        <p>Comprehensive step-by-step breakdown of how documents are ingested, parsed, analyzed, and scored</p>
+        <h2><i class="fa-solid fa-diagram-project"></i> How It Works</h2>
+        <p>4-step forensic verification workflow</p>
       </div>
 
       <div class="workflow-steps-list">
         <div class="workflow-step-card">
-          <div class="workflow-step-num">1</div>
+          <div class="workflow-step-num">01</div>
           <div class="workflow-step-content">
-            <h3>Document Image Preprocessing</h3>
-            <p>Resolution normalization, adaptive contrast enhancement (PIL.ImageEnhance), sharpening filter, and binarization thresholding to prepare physical marksheets for OCR.</p>
+            <h3>UPLOAD</h3>
+            <p>Upload physical certificate scan or photo (PDF, JPG, JPEG, PNG, WEBP). Document image is enhanced using resolution scaling, sharpening, and contrast normalization.</p>
           </div>
         </div>
 
         <div class="workflow-step-card">
-          <div class="workflow-step-num">2</div>
+          <div class="workflow-step-num">02</div>
           <div class="workflow-step-content">
-            <h3>Bilingual Tamil + English OCR</h3>
-            <p>Engineered for Indian state board marksheets (`eng+tam` traineddata). Extracts candidate name, register number, certificate ID, total marks, and passing session with confidence scores.</p>
+            <h3>ANALYZE</h3>
+            <p>Bilingual Tamil + English OCR extracts candidate details. PyTorch MobileNetV2 AI model analyzes image texture while Error Level Analysis (ELA) flags pixel compression anomalies.</p>
           </div>
         </div>
 
         <div class="workflow-step-card">
-          <div class="workflow-step-num">3</div>
+          <div class="workflow-step-num">03</div>
           <div class="workflow-step-content">
-            <h3>PyTorch MobileNetV2 AI Forgery Classifier</h3>
-            <p>Deep learning vision model evaluates overall image texture, seal boundaries, font baseline alignment, and tampered mark patterns (Genuine Probability vs Forgery Risk).</p>
+            <h3>VERIFY</h3>
+            <p>Decodes embedded QR code signatures, compares candidate details against the official board registry database, and calculates SHA-256 cryptographic document fingerprints.</p>
           </div>
         </div>
 
         <div class="workflow-step-card">
-          <div class="workflow-step-num">4</div>
+          <div class="workflow-step-num">04</div>
           <div class="workflow-step-content">
-            <h3>Error Level Analysis (ELA) Compression Forensics</h3>
-            <p>Re-saves image at known compression quality (95%) and computes error difference heatmap. Spliced or edited mark digits exhibit higher error levels highlighted in red.</p>
-          </div>
-        </div>
-
-        <div class="workflow-step-card">
-          <div class="workflow-step-num">5</div>
-          <div class="workflow-step-content">
-            <h3>Cryptographic QR Signature Decoding</h3>
-            <p>Locates and decodes embedded 2D QR codes using OpenCV/PyZbar. Parses candidate metadata and computes SHA-256 hash of the normalized QR payload string.</p>
-          </div>
-        </div>
-
-        <div class="workflow-step-card">
-          <div class="workflow-step-num">6</div>
-          <div class="workflow-step-content">
-            <h3>Official Board Registry Matching</h3>
-            <p>Executes multi-parameter lookup in SQLite registry database using Certificate ID, Register Number, Student Name (fuzzy string matching), and Date of Birth.</p>
-          </div>
-        </div>
-
-        <div class="workflow-step-card">
-          <div class="workflow-step-num">7</div>
-          <div class="workflow-step-content">
-            <h3>SHA-256 Document Fingerprint Integrity</h3>
-            <p>Computes cryptographic SHA-256 checksum of raw image bytes to verify against tamper-proof registered document hashes.</p>
-          </div>
-        </div>
-
-        <div class="workflow-step-card">
-          <div class="workflow-step-num">8</div>
-          <div class="workflow-step-content">
-            <h3>Multi-Factor Authenticity Scoring</h3>
-            <p>Weights individual component scores (OCR 20%, Registry Match 15%, QR Signature 15%, ELA 15%, AI Model 20%, SHA-256 15%) into a deterministic 100-point score.</p>
-          </div>
-        </div>
-
-        <div class="workflow-step-card">
-          <div class="workflow-step-num">9</div>
-          <div class="workflow-step-content">
-            <h3>Explainable Verdict & Report Generation</h3>
-            <p>Outputs clear decision verdict (`VERIFIED`, `SUSPICIOUS`, or `INVALID`) along with itemized field comparison table and downloadable PDF Forensic Verification Certificate.</p>
+            <h3>REPORT</h3>
+            <p>Generates a 100-point authenticity score badge, itemized field match/discrepancy comparison table, and downloadable PDF Forensic Verification Certificate.</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- =================================================================== -->
-    <!-- 4. SECURITY ARCHITECTURE VIEW                                      -->
+    <!-- 7. SECURITY PAGE VIEW                                              -->
     <!-- =================================================================== -->
     <div id="view-security" class="tab-view hidden">
       <div class="section-title-box">
-        <h2><i class="fa-solid fa-shield-halved"></i> Multi-Factor Security Architecture</h2>
-        <p>Zero-trust verification framework combining computer vision, AI, and cryptography</p>
+        <h2><i class="fa-solid fa-shield-halved"></i> MULTI-FACTOR DOCUMENT VERIFICATION</h2>
+        <p>Zero-trust security architecture for physical & digital academic documents</p>
       </div>
 
-      <div class="security-grid">
+      <div class="formula-banner">
+        AI FORENSICS + OCR CONSISTENCY + QR VERIFICATION + REGISTRY MATCH + SHA-256 + LAYOUT ANALYSIS = TRUST ASSESSMENT
+      </div>
+
+      <div class="security-grid" style="margin-top: 1.5rem;">
         <div class="glass-card">
-          <h3><i class="fa-solid fa-layer-group" style="color: var(--primary-cyan);"></i> Why Single-Factor Verification Fails</h3>
-          <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">
-            A printed QR code can be copied onto a forged marksheet, while an authentic document can have individual mark digits altered. Relying solely on QR codes or visual inspection leaves critical vulnerabilities.
+          <h3><i class="fa-solid fa-layer-group" style="color: var(--primary-blue);"></i> Why Single-Factor Verification Fails</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.6;">
+            A printed QR code can easily be copied onto a forged marksheet, while an authentic document can have individual mark digits altered. Relying solely on QR codes or visual inspection leaves critical vulnerabilities.
           </p>
-          <div class="formula-box" style="margin-top: 1rem;">
-            <strong>Multi-Factor Security Formula:</strong><br>
-            <code>Authenticity Score = AI_Model(20%) + OCR(20%) + Registry(15%) + QR(15%) + ELA(15%) + SHA256(15%)</code>
-          </div>
         </div>
 
         <div class="glass-card">
           <h3><i class="fa-solid fa-handshake-angle" style="color: var(--success-green);"></i> Complementing DigiLocker & NAD</h3>
-          <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">
-            While DigiLocker and National Academic Depository (NAD) store authoritative native digital documents, millions of admissions and job applications involve physical paper copies or scanned images.
-          </p>
-          <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">
-            <strong>Authenticity Validator for Academia</strong> acts as a forensic verification layer specifically designed to audit physical, scanned, or photographed marksheet images.
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.6;">
+            While DigiLocker and National Academic Depository (NAD) store authoritative digital credentials, millions of applications involve physical paper copies or scanned images. <strong>Authenticity Validator for Academia</strong> acts as a forensic verification layer specifically designed to audit physical, scanned, or photographed marksheets.
           </p>
         </div>
       </div>
     </div>
 
     <!-- =================================================================== -->
-    <!-- 5. MODEL METRICS VIEW                                              -->
+    <!-- 8. MODEL METRICS VIEW                                              -->
     <!-- =================================================================== -->
     <div id="view-model" class="tab-view hidden">
       
       <div class="glass-card" style="margin-bottom: 1.5rem;">
         <div class="card-title">
-          <i class="fa-solid fa-brain"></i> MobileNetV2 Transfer Learning Validation Metrics
+          <i class="fa-solid fa-brain"></i> Model: PyTorch MobileNetV2 Classifier
         </div>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
-          Empirical evaluation results of the MobileNetV2 PyTorch classification model trained on academic document forgery datasets.
+          Empirical validation metrics measured on academic document forgery datasets.
         </p>
 
         <div class="metrics-grid">
@@ -579,7 +754,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
                 <td style="padding: 0.75rem; font-weight: 600;">Actual Genuine</td>
                 <td style="padding: 0.75rem; text-align: center; background: rgba(16, 185, 129, 0.15); font-weight: 700; color: var(--success-green);" id="cm-tp">22 (TP)</td>
                 <td style="padding: 0.75rem; text-align: center; background: rgba(239, 68, 68, 0.1);" id="cm-fn">1 (FN)</td>
@@ -594,7 +769,7 @@
         </div>
 
         <div class="glass-card">
-          <div class="card-title"><i class="fa-solid fa-database"></i> Dataset & Model Architecture</div>
+          <div class="card-title"><i class="fa-solid fa-database"></i> Dataset & Training Architecture</div>
           <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
             <div style="display: flex; justify-content: space-between;">
               <span style="color: var(--text-muted);">Total Dataset Size:</span>
@@ -609,7 +784,7 @@
               <strong>PyTorch MobileNetV2</strong>
             </div>
             <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-muted);">Trained Weights File:</span>
+              <span style="color: var(--text-muted);">Weight Checkpoint File:</span>
               <strong>backend/model.pth</strong>
             </div>
           </div>
@@ -619,18 +794,18 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 6. DASHBOARD & AUDIT LOGS VIEW                                     -->
+    <!-- 9. ADMIN DASHBOARD VIEW                                            -->
     <!-- =================================================================== -->
     <div id="view-dashboard" class="tab-view hidden">
       <div class="section-title-box">
-        <h2><i class="fa-solid fa-gauge-high"></i> Verification Audit Log & System Metrics</h2>
-        <p>Real-time analytics of document verification requests and database logs</p>
+        <h2><i class="fa-solid fa-sliders"></i> Admin System Dashboard</h2>
+        <p>System-wide verification statistics and audit logs</p>
       </div>
 
       <div class="metrics-grid" style="margin-bottom: 1.5rem;">
         <div class="metric-card">
-          <div class="metric-value" style="color: var(--primary-cyan);" id="stat-total-scans">24</div>
-          <div class="metric-label">Total Documents Scanned</div>
+          <div class="metric-value" style="color: var(--primary-blue);" id="stat-total-scans">24</div>
+          <div class="metric-label">Total Documents Verified</div>
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color: var(--success-green);" id="stat-verified-count">18</div>
@@ -638,11 +813,11 @@
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color: var(--warning-amber);" id="stat-warning-count">4</div>
-          <div class="metric-label">Suspicious / Review</div>
+          <div class="metric-label">Suspicious / Warnings</div>
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color: var(--danger-red);" id="stat-failed-count">2</div>
-          <div class="metric-label">Invalid / Unverified</div>
+          <div class="metric-label">Invalid Credentials</div>
         </div>
       </div>
 
@@ -652,7 +827,7 @@
           <thead>
             <tr>
               <th>Log ID</th>
-              <th>Document / Certificate ID</th>
+              <th>Certificate ID</th>
               <th>Filename</th>
               <th>Authenticity Score</th>
               <th>Status</th>
@@ -669,7 +844,7 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 7. ABOUT VIEW                                                     -->
+    <!-- 10. ABOUT VIEW                                                     -->
     <!-- =================================================================== -->
     <div id="view-about" class="tab-view hidden">
       <div class="section-title-box">
@@ -689,7 +864,7 @@
         <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; gap: 2rem; flex-wrap: wrap;">
           <div>
             <span style="font-size: 0.8rem; color: var(--text-dim); display: block;">PROJECT CODE</span>
-            <strong style="color: var(--primary-cyan);">SIH25029</strong>
+            <strong style="color: var(--primary-blue);">SIH25029</strong>
           </div>
           <div>
             <span style="font-size: 0.8rem; color: var(--text-dim); display: block;">BACKEND ARCHITECTURE</span>
@@ -710,24 +885,69 @@
   </main>
 
   <!-- =================================================================== -->
+  <!-- LOGIN MODAL                                                        -->
+  <!-- =================================================================== -->
+  <div class="modal-overlay hidden" id="login-modal">
+    <div class="login-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <div class="brand-icon" style="width: 32px; height: 32px; font-size: 1rem;"><i class="fa-solid fa-shield-halved"></i></div>
+          <strong style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; color: var(--text-navy);">Platform Login</strong>
+        </div>
+        <button class="btn-close-modal" onclick="closeLoginModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Selected Role: <strong id="login-role-badge" style="color: var(--primary-blue); text-transform: uppercase;">VERIFIER</strong>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0.85rem;">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="login-email" class="input-form" placeholder="verifier@institution.edu.in" value="verifier@institution.edu.in">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label class="form-label">Password</label>
+        <div style="position: relative;">
+          <input type="password" id="login-password" class="input-form" placeholder="••••••••" value="demo1234">
+          <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-dim); cursor: pointer;"><i class="fa-solid fa-eye" id="pass-eye-icon"></i></button>
+        </div>
+      </div>
+
+      <button class="btn-start-verify" onclick="submitLogin()"><i class="fa-solid fa-right-to-bracket"></i> Login to Portal</button>
+
+      <!-- Demo Login Shortcuts -->
+      <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-color); text-align: center;">
+        <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem; font-weight: 600;">DEMO LOGIN SHORTCUTS</div>
+        <div style="display: flex; gap: 0.35rem; justify-content: center; flex-wrap: wrap;">
+          <button class="btn-demo-shortcut" onclick="demoQuickLogin('student')">Student</button>
+          <button class="btn-demo-shortcut" onclick="demoQuickLogin('institution')">Institution</button>
+          <button class="btn-demo-shortcut" onclick="demoQuickLogin('verifier')">Verifier</button>
+          <button class="btn-demo-shortcut" onclick="demoQuickLogin('admin')">Admin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
   <!-- FORENSIC VERIFICATION REPORT MODAL                                 -->
   <!-- =================================================================== -->
   <div class="modal-overlay hidden" id="report-modal">
     <div class="modal-card">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fa-solid fa-file-contract" style="color: var(--primary-cyan); font-size: 1.25rem;"></i>
-          <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.1rem; color: white;">Official Forensic Verification Certificate</span>
+          <i class="fa-solid fa-file-contract" style="color: var(--primary-blue); font-size: 1.25rem;"></i>
+          <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--text-navy);">Official Forensic Verification Certificate</span>
         </div>
         <button class="btn-close-modal" onclick="closeReportModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="modal-body" id="report-modal-content">
-        <!-- Report Certificate Content Rendered Dynamically -->
+        <!-- Report Content Rendered Dynamically -->
       </div>
 
       <div class="modal-footer">
-        <button class="btn-modal-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / Download PDF Report</button>
+        <button class="btn-modal-print" onclick="window.print()"><i class="fa-solid fa-print"></i> DOWNLOAD FORENSIC REPORT (PDF)</button>
         <button class="btn-modal-close" onclick="closeReportModal()">Close</button>
       </div>
     </div>
