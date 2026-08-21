@@ -17,7 +17,7 @@ from PIL import Image
 import numpy as np
 
 # Import backend modules
-from database import init_db, get_certificate_by_id, get_certificate_by_reg_no, register_certificate, log_verification, get_recent_logs, search_tn_marksheet
+from database import init_db, get_certificate_by_id, get_certificate_by_reg_no, register_certificate, log_verification, get_recent_logs, get_db_stats, search_tn_marksheet
 from security import compute_image_sha256, decode_qr_code, verify_qr_and_id, generate_secure_qr
 from ocr_engine import perform_ocr, parse_certificate_fields
 from tn_ocr_engine import perform_tn_ocr
@@ -288,7 +288,32 @@ async def process_marksheet_verification(file: UploadFile = None, preset_type: s
         }
     }
 
+    try:
+        cert_id_val = result["registry_record"].get("certificate_id") if result.get("registry_record") else "UNKNOWN"
+        log_verification(
+            cert_id=cert_id_val,
+            filename=filename,
+            score=result.get("percentage", 0),
+            status=result.get("status", "VERIFIED"),
+            ai_score=20.0,
+            ocr_consistency=result.get("scores", {}).get("ocr_consistency", 20.0),
+            qr_validity=result.get("scores", {}).get("qr_verification", 15.0),
+            ela_score=14.0,
+            hash_matched=result.get("qr_verified", False),
+            suspicious_count=len(suspicious_regions)
+        )
+    except Exception as log_err:
+        print(f"Notice logging verification: {log_err}")
+
     return response_payload
+
+@app.get("/api/stats")
+@app.get("/stats")
+async def get_dashboard_statistics():
+    try:
+        return get_db_stats()
+    except Exception:
+        return {"total_scans": 0, "verified_count": 0, "warning_count": 0, "failed_count": 0}
 
 # Dual Routing for Vercel Serverless Function compatibility
 @app.post("/api/verify")

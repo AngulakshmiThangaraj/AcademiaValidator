@@ -237,5 +237,24 @@ def get_recent_logs(limit=20):
     conn.close()
     return [dict(r) for r in rows]
 
+def get_db_stats():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM verification_logs")
+    total_scans = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM verification_logs WHERE status = 'VERIFIED'")
+    verified_count = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM verification_logs WHERE status IN ('PARTIALLY_VERIFIED', 'REVIEW_REQUIRED', 'SUSPICIOUS')")
+    warning_count = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM verification_logs WHERE status = 'INVALID'")
+    failed_count = cursor.fetchone()[0]
+    conn.close()
+    return {
+        "total_scans": total_scans,
+        "verified_count": verified_count,
+        "warning_count": warning_count,
+        "failed_count": failed_count
+    }
+
 if __name__ == "__main__":
     init_db()

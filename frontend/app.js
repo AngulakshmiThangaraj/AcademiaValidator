@@ -6,7 +6,7 @@ let currentActiveRole = 'verifier';
 
 // Tab Navigation Switcher
 function switchTab(tabId) {
-  const tabs = ['home', 'verify', 'roles', 'student', 'institution', 'how', 'security', 'model', 'dashboard', 'about'];
+  const tabs = ['home', 'verify', 'roles', 'student', 'institution', 'model', 'dashboard', 'about'];
   
   tabs.forEach(t => {
     const viewEl = document.getElementById(`view-${t}`);
@@ -31,7 +31,8 @@ function switchTab(tabId) {
 
   if (tabId === 'model') {
     fetchModelMetrics();
-  } else if (tabId === 'dashboard') {
+  } else if (tabId === 'dashboard' || tabId === 'student') {
+    fetchDashboardStats();
     fetchAuditLogs();
   }
 
@@ -452,6 +453,10 @@ function renderResults(data) {
   const dbgQr = document.getElementById('debug-qr-json');
   if (dbgOcr && data.ocr_debug_info) dbgOcr.textContent = JSON.stringify(data.ocr_debug_info.extracted_fields || {}, null, 2);
   if (dbgQr && data.ocr_debug_info) dbgQr.textContent = JSON.stringify(data.ocr_debug_info.qr_debug || {}, null, 2);
+
+  // 10. Automatically update real-time database dashboard stats
+  fetchDashboardStats();
+  fetchAuditLogs();
 }
 
 // Viewer Tab Switcher
@@ -594,31 +599,85 @@ async function fetchModelMetrics() {
   }
 }
 
+// Fetch Dynamic Dashboard Statistics from SQLite backend API
+async function fetchDashboardStats() {
+  try {
+    const response = await fetch(`${API_BASE}/api/stats`);
+    if (response.ok) {
+      const stats = await response.json();
+      
+      // Admin Dashboard stats
+      const elTotal = document.getElementById('stat-total-scans');
+      const elVerified = document.getElementById('stat-verified-count');
+      const elWarning = document.getElementById('stat-warning-count');
+      const elFailed = document.getElementById('stat-failed-count');
+
+      if (elTotal) elTotal.textContent = stats.total_scans || 0;
+      if (elVerified) elVerified.textContent = stats.verified_count || 0;
+      if (elWarning) elWarning.textContent = stats.warning_count || 0;
+      if (elFailed) elFailed.textContent = stats.failed_count || 0;
+
+      // Student Dashboard stats
+      const sTotal = document.getElementById('student-stat-total');
+      const sVerified = document.getElementById('student-stat-verified');
+      const sSuspicious = document.getElementById('student-stat-suspicious');
+
+      if (sTotal) sTotal.textContent = stats.total_scans || 0;
+      if (sVerified) sVerified.textContent = stats.verified_count || 0;
+      if (sSuspicious) sSuspicious.textContent = (stats.warning_count || 0) + (stats.failed_count || 0);
+    }
+  } catch (err) {
+    console.error("Error fetching dashboard stats:", err);
+  }
+}
+
 // Fetch Audit Logs
 async function fetchAuditLogs() {
   try {
     const response = await fetch(`${API_BASE}/api/logs`);
     const tbody = document.getElementById('audit-log-rows');
-    if (!tbody) return;
+    const studentTbody = document.getElementById('student-audit-log-rows');
 
     if (response.ok) {
       const logs = await response.json();
-      if (logs && logs.length > 0) {
-        tbody.innerHTML = '';
-        logs.forEach(log => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>#${log.id}</td>
-            <td style="font-weight: 700; color: var(--primary-blue);">${log.cert_id || 'UNKNOWN'}</td>
-            <td>${log.filename || 'marksheet.jpg'}</td>
-            <td><strong>${log.authenticity_score || 0}%</strong></td>
-            <td><span class="verdict-tag ${log.status === 'VERIFIED' ? 'verified' : 'warning'}" style="font-size: 0.7rem;">${log.status}</span></td>
-            <td style="font-size: 0.775rem; color: var(--text-dim);">${log.verified_at || 'Just now'}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } else {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">No verification records found in database log table.</td></tr>`;
+      
+      if (tbody) {
+        if (logs && logs.length > 0) {
+          tbody.innerHTML = '';
+          logs.forEach(log => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>#${log.id}</td>
+              <td style="font-weight: 700; color: var(--primary-blue);">${log.cert_id || 'UNKNOWN'}</td>
+              <td>${log.filename || 'marksheet.jpg'}</td>
+              <td><strong>${log.authenticity_score || 0}%</strong></td>
+              <td><span class="verdict-tag ${log.status === 'VERIFIED' ? 'verified' : 'warning'}" style="font-size: 0.7rem;">${log.status}</span></td>
+              <td style="font-size: 0.775rem; color: var(--text-dim);">${log.verified_at || 'Just now'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">No verification records found in database log table.</td></tr>`;
+        }
+      }
+
+      if (studentTbody) {
+        if (logs && logs.length > 0) {
+          studentTbody.innerHTML = '';
+          logs.forEach(log => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><strong>${log.filename || 'marksheet.jpg'}</strong></td>
+              <td style="color: var(--primary-blue); font-weight: 700;">${log.cert_id || 'UNKNOWN'}</td>
+              <td style="font-size: 0.8rem; color: var(--text-dim);">${log.verified_at || 'Just now'}</td>
+              <td><span class="verdict-tag ${log.status === 'VERIFIED' ? 'verified' : 'warning'}" style="font-size: 0.7rem;">${log.status}</span></td>
+              <td><strong style="color: ${log.status === 'VERIFIED' ? 'var(--success-green)' : 'var(--warning-amber)'};">${log.authenticity_score || 0}%</strong></td>
+            `;
+            studentTbody.appendChild(tr);
+          });
+        } else {
+          studentTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">No verification records found in database.</td></tr>`;
+        }
       }
     }
   } catch (err) {
